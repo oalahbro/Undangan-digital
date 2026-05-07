@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Undangan Eka & Salsa</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- ====== LOGIN ====== -->
+  <section id="loginView" class="view view--center" hidden>
+    <form id="loginForm" class="card login">
+      <h1 class="login__title">Admin Panel</h1>
+      <p class="login__subtitle">Undangan Eka &amp; Salsa</p>
+
+      <label class="field">
+        <span>Username</span>
+        <input type="text" name="username" autocomplete="username" required />
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required />
+      </label>
+
+      <button class="btn btn--primary" type="submit">Login</button>
+
+      <p id="loginError" class="error" hidden></p>
+    </form>
+  </section>
+
+  <!-- ====== DASHBOARD ====== -->
+  <section id="dashView" class="view" hidden>
+    <header class="topbar">
+      <div class="topbar__left">
+        <h1 class="topbar__title">Admin Panel</h1>
+        <span class="topbar__sub">Eka &amp; Salsa</span>
+      </div>
+      <div class="topbar__right">
+        <a href="/" target="_blank" rel="noopener" class="btn btn--ghost">↗ Lihat Undangan</a>
+        <span id="userBadge" class="user-badge"></span>
+        <button id="logoutBtn" class="btn btn--ghost">Logout</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab is-active" data-tab="mempelai">Mempelai</button>
+      <button class="tab" data-tab="alamat">Alamat</button>
+      <button class="tab" data-tab="event">Event</button>
+      <button class="tab" data-tab="story">Our Story</button>
+      <button class="tab" data-tab="bank">Bank</button>
+      <button class="tab" data-tab="social">Social Media</button>
+      <button class="tab" data-tab="comments">Comments</button>
+    </nav>
+
+    <main class="content">
+
+      <!-- Mempelai -->
+      <div class="panel is-active" data-panel="mempelai">
+        <div class="panel__head">
+          <h2>Mempelai</h2>
+          <button class="btn btn--primary" data-save="mempelai">Simpan</button>
+        </div>
+        <div class="grid-2">
+          <fieldset class="card">
+            <legend>Groom (Pria)</legend>
+            <label class="field"><span>Nickname</span><input data-bind="mempelai.groom.nickname" /></label>
+            <label class="field"><span>Nama Lengkap</span><input data-bind="mempelai.groom.fullname" /></label>
+            <label class="field"><span>Orang Tua</span><textarea rows="2" data-bind="mempelai.groom.parents"></textarea></label>
+            <label class="field"><span>Foto (URL)</span><input data-bind="mempelai.groom.photo" /></label>
+            <label class="field"><span>Bio</span><textarea rows="2" data-bind="mempelai.groom.bio"></textarea></label>
+            <img class="preview" data-preview="mempelai.groom.photo" alt="" />
+          </fieldset>
+
+          <fieldset class="card">
+            <legend>Bride (Wanita)</legend>
+            <label class="field"><span>Nickname</span><input data-bind="mempelai.bride.nickname" /></label>
+            <label class="field"><span>Nama Lengkap</span><input data-bind="mempelai.bride.fullname" /></label>
+            <label class="field"><span>Orang Tua</span><textarea rows="2" data-bind="mempelai.bride.parents"></textarea></label>
+            <label class="field"><span>Foto (URL)</span><input data-bind="mempelai.bride.photo" /></label>
+            <label class="field"><span>Bio</span><textarea rows="2" data-bind="mempelai.bride.bio"></textarea></label>
+            <img class="preview" data-preview="mempelai.bride.photo" alt="" />
+          </fieldset>
+        </div>
+      </div>
+
+      <!-- Alamat -->
+      <div class="panel" data-panel="alamat">
+        <div class="panel__head">
+          <h2>Alamat</h2>
+          <button class="btn btn--primary" data-save="alamat">Simpan</button>
+        </div>
+        <fieldset class="card">
+          <label class="field"><span>Venue</span><input data-bind="alamat.venue" /></label>
+          <label class="field"><span>Map URL</span><input data-bind="alamat.mapUrl" /></label>
+          <label class="field"><span>Alamat Pengiriman Hadiah</span><textarea rows="3" data-bind="alamat.deliveryAddress"></textarea></label>
+        </fieldset>
+      </div>
+
+      <!-- Event -->
+      <div class="panel" data-panel="event">
+        <div class="panel__head">
+          <h2>Event</h2>
+          <button class="btn btn--primary" data-save="event">Simpan</button>
+        </div>
+        <fieldset class="card">
+          <legend>Umum</legend>
+          <label class="field"><span>Tanggal (YYYY-MM-DD)</span><input data-bind="event.date" /></label>
+          <label class="field"><span>Label Tanggal</span><input data-bind="event.dateLabel" /></label>
+          <label class="field"><span>Timezone</span><input data-bind="event.timezone" /></label>
+        </fieldset>
+        <div class="grid-2">
+          <fieldset class="card">
+            <legend>Akad</legend>
+            <label class="field"><span>Jam (HH:mm)</span><input data-bind="event.akad.time" /></label>
+            <label class="field"><span>Label Jam</span><input data-bind="event.akad.label" /></label>
+            <label class="field"><span>Lokasi</span><input data-bind="event.akad.location" /></label>
+            <label class="field"><span>Map URL</span><input data-bind="event.akad.mapUrl" /></label>
+          </fieldset>
+          <fieldset class="card">
+            <legend>Resepsi</legend>
+            <label class="field"><span>Jam (HH:mm)</span><input data-bind="event.resepsi.time" /></label>
+            <label class="field"><span>Label Jam</span><input data-bind="event.resepsi.label" /></label>
+            <label class="field"><span>Lokasi</span><input data-bind="event.resepsi.location" /></label>
+            <label class="field"><span>Map URL</span><input data-bind="event.resepsi.mapUrl" /></label>
+          </fieldset>
+        </div>
+      </div>
+
+      <!-- Our Story -->
+      <div class="panel" data-panel="story">
+        <div class="panel__head">
+          <h2>Our Story</h2>
+          <div class="panel__actions">
+            <button class="btn btn--ghost" data-action="story-add">+ Tambah Story</button>
+            <button class="btn btn--primary" data-save="story">Simpan</button>
+          </div>
+        </div>
+        <div id="storyList" class="list"></div>
+      </div>
+
+      <!-- Bank -->
+      <div class="panel" data-panel="bank">
+        <div class="panel__head">
+          <h2>Bank / Rekening</h2>
+          <div class="panel__actions">
+            <button class="btn btn--ghost" data-action="bank-add">+ Tambah Bank</button>
+            <button class="btn btn--primary" data-save="bank">Simpan</button>
+          </div>
+        </div>
+        <div id="bankList" class="list"></div>
+      </div>
+
+      <!-- Social -->
+      <div class="panel" data-panel="social">
+        <div class="panel__head">
+          <h2>Social Media</h2>
+          <button class="btn btn--primary" data-save="social">Simpan</button>
+        </div>
+        <fieldset class="card">
+          <label class="field"><span>Instagram Groom</span><input data-bind="socialMedia.groom.instagram" /></label>
+          <label class="field"><span>Instagram Bride</span><input data-bind="socialMedia.bride.instagram" /></label>
+          <label class="field"><span>WhatsApp (62…)</span><input data-bind="socialMedia.whatsapp" /></label>
+        </fieldset>
+      </div>
+
+      <!-- Comments -->
+      <div class="panel" data-panel="comments">
+        <div class="panel__head">
+          <h2>Comments / Wishes</h2>
+          <button class="btn btn--ghost" data-action="comments-refresh">↻ Refresh</button>
+        </div>
+        <div id="commentsStats" class="stats"></div>
+        <div id="commentsList" class="list"></div>
+      </div>
+
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+  </section>
+
+  <script src="admin.js"></script>
+</body>
+</html>

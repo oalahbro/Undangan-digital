@@ -1,0 +1,102 @@
+{
+  "mempelai": {
+    "groom": {
+      "nickname": "Eka",
+      "fullname": "Eka Pradana Putra",
+      "parents": "Putra Kedua dari Bpk. H. Ahmad Fadli & Ibu Hj. Nur Aisyah",
+      "photo": "https://inv.punakawandigital.id/wp-content/uploads/2025/11/25KN154_PROFIL_.jpg",
+      "bio": ""
+    },
+    "bride": {
+      "nickname": "Salsa",
+      "fullname": "Salsa Hermiyawati",
+      "parents": "Putri Pertama dari Bpk. H. Suryadi Wijaya & Ibu Hj. Sri Rahayu",
+      "photo": "https://inv.punakawandigital.id/wp-content/uploads/2025/11/25KN154_PROFIL.jpg",
+      "bio": ""
+    }
+  },
+  "alamat": {
+    "venue": "Kediaman Mempelai Wanita, Ds. Pagu, Wates, Kediri — Jawa Timur",
+    "mapUrl": "https://maps.google.com",
+    "deliveryAddress": "Ds. Pagu, Kec. Wates, Kab. Kediri, Jawa Timur — 64174"
+  },
+  "event": {
+    "date": "2025-12-30",
+    "dateLabel": "Selasa, 30 Desember 2025",
+    "timezone": "WIB",
+    "akad": {
+      "time": "07:00",
+      "label": "07.00 WIB",
+      "location": "Ds. Pagu, Wates, Kediri",
+      "mapUrl": "https://maps.google.com"
+    },
+    "resepsi": {
+      "time": "10:00",
+      "label": "10.00 WIB",
+      "location": "Ds. Pagu, Wates, Kediri",
+      "mapUrl": "https://maps.google.com"
+    }
+  },
+  "ourStory": [
+    {
+      "year": "2022",
+      "title": "Awal Bertemu",
+      "description": "Percakapan singkat yang menjadi awal dari segalanya.",
+      "image": "https://images.unsplash.com/photo-1525772764200-be829a350797?w=700&q=85&fit=crop"
+    },
+    {
+      "year": "2022",
+      "title": "First Date",
+      "description": "Langkah pertama yang membuka banyak cerita setelahnya.",
+      "image": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=700&q=85&fit=crop"
+    },
+    {
+      "year": "2023",
+      "title": "Menjalin Kasih",
+      "description": "Saling mengenal lebih dalam dan menentukan arah bersama.",
+      "image": "https://images.unsplash.com/photo-1519741497674-611481863552?w=700&q=85&fit=crop"
+    },
+    {
+      "year": "2024",
+      "title": "Lamaran",
+      "description": "Dengan restu kedua keluarga, kami mengikat janji.",
+      "image": "https://images.unsplash.com/photo-1529636798458-92182e662485?w=700&q=85&fit=crop"
+    },
+    {
+      "year": "2024",
+      "title": "Persiapan",
+      "description": "Merangkai mimpi kecil menjadi hari besar yang dinanti.",
+      "image": "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=700&q=85&fit=crop"
+    },
+    {
+      "year": "2025",
+      "title": "Hari Bahagia",
+      "description": "Hari yang dinanti akhirnya tiba — terima kasih atas doanya.",
+      "image": "https://images.unsplash.com/photo-1549417229-aa67d3263c09?w=700&q=85&fit=crop"
+    }
+  ],
+  "bank": [
+    {
+      "name": "BCA",
+      "number": "1234567890",
+      "numberFormatted": "1234 5678 90",
+      "atasNama": "Salsa"
+    },
+    {
+      "name": "DANA",
+      "number": "081234567890",
+      "numberFormatted": "0812 3456 7890",
+      "atasNama": "Eka"
+    }
+  ],
+  "socialMedia": {
+    "groom": {
+      "instagram": "https://instagram.com/eka"
+    },
+    "bride": {
+      "instagram": "https://instagram.com/salsa"
+    },
+    "whatsapp": "6281234567890"
+  },
+  "comments": []
+}
