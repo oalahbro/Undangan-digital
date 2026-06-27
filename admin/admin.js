@@ -498,5 +498,81 @@ function formatTime(ts) {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lb.hidden) close(); });
 })();
 
+/* ---------- Generator link undangan tamu ---------- */
+(function guestLinks() {
+  const baseInput  = $('#guestBaseUrl');
+  const namesInput = $('#guestNames');
+  const result     = $('#guestResult');
+  const countEl    = $('#guestCount');
+  if (!baseInput || !namesInput || !result) return;
+
+  baseInput.value = localStorage.getItem('guestBaseUrl') || location.origin;
+
+  let rows = [];   // [{ name, url }]
+
+  const buildUrl = (name) => {
+    const base = (baseInput.value.trim().replace(/\/+$/, '')) || location.origin;
+    return base + '/?to=' + encodeURIComponent(name);
+  };
+
+  function generate() {
+    localStorage.setItem('guestBaseUrl', baseInput.value.trim());
+    const names = namesInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+    // buang duplikat, pertahankan urutan
+    const seen = new Set();
+    rows = names.filter(n => (seen.has(n) ? false : seen.add(n))).map(n => ({ name: n, url: buildUrl(n) }));
+    render();
+  }
+
+  function render() {
+    countEl.textContent = rows.length
+      ? `${rows.length} link dibuat`
+      : 'Tidak ada nama. Tempel daftar lalu klik Generate.';
+    result.innerHTML = rows.map((r, i) => `
+      <div class="guest-row">
+        <div class="guest-row__info">
+          <span class="guest-row__name">${escapeHtml(r.name)}</span>
+          <span class="guest-row__url">${escapeHtml(r.url)}</span>
+        </div>
+        <button class="btn btn--ghost guest-row__copy" data-copy-url="${i}" type="button">Copy</button>
+      </div>
+    `).join('');
+  }
+
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch { return false; }
+  }
+
+  result.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-copy-url]');
+    if (!btn) return;
+    const r = rows[+btn.dataset.copyUrl];
+    if (!r) return;
+    if (await copyText(r.url)) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
+    else toast('Gagal menyalin', 'error');
+  });
+
+  $('#guestGenerate').addEventListener('click', generate);
+
+  $('#guestCopyAll').addEventListener('click', async () => {
+    if (!rows.length) return toast('Generate dulu', 'error');
+    const text = rows.map(r => `${r.name}\t${r.url}`).join('\n');
+    toast(await copyText(text) ? `${rows.length} link disalin` : 'Gagal menyalin', rows.length ? 'ok' : 'error');
+  });
+
+  $('#guestDownloadCsv').addEventListener('click', () => {
+    if (!rows.length) return toast('Generate dulu', 'error');
+    const esc = (s) => `"${String(s).replace(/"/g, '""')}"`;
+    const csv = 'Nama,URL\n' + rows.map(r => `${esc(r.name)},${esc(r.url)}`).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'link-undangan.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+
 /* ---------- Init ---------- */
 checkAuth();

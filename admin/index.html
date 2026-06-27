@@ -54,6 +54,7 @@
       <button class="tab" data-tab="bank">Bank</button>
       <button class="tab" data-tab="social">Social Media</button>
       <button class="tab" data-tab="comments">Comments</button>
+      <button class="tab" data-tab="guests">Link Tamu</button>
     </nav>
 
     <main class="content">
@@ -221,6 +222,30 @@
         </div>
         <div id="commentsStats" class="stats"></div>
         <div id="commentsList" class="list"></div>
+      </div>
+
+      <!-- Link Tamu (generator) -->
+      <div class="panel" data-panel="guests">
+        <div class="panel__head">
+          <h2>Generator Link Undangan</h2>
+        </div>
+        <fieldset class="card">
+          <label class="field">
+            <span>Base URL (domain undangan)</span>
+            <input id="guestBaseUrl" placeholder="https://undangan.contoh.id" />
+          </label>
+          <label class="field">
+            <span>Daftar Nama (satu nama per baris)</span>
+            <textarea id="guestNames" rows="8" placeholder="Bapak Joris&#10;Ibu Sari &amp; Keluarga&#10;Bpk. Budi Santoso"></textarea>
+          </label>
+          <div class="panel__actions">
+            <button class="btn btn--primary" id="guestGenerate" type="button">Generate</button>
+            <button class="btn btn--ghost" id="guestCopyAll" type="button">Copy Semua</button>
+            <button class="btn btn--ghost" id="guestDownloadCsv" type="button">Download CSV</button>
+          </div>
+          <p id="guestCount" class="empty">Tempel daftar nama lalu klik Generate.</p>
+          <div id="guestResult" class="guest-list"></div>
+        </fieldset>
       </div>
 
     </main>
