@@ -51,7 +51,6 @@ Edit langsung file-nya — semua data placeholder ada di `index.html`:
 
 - **Vanilla** — tidak butuh build tool, framework, atau dependencies
 - **Responsive** — desktop, tablet, mobile (breakpoint 720px & 380px)
-- **Accessible** — support `prefers-reduced-motion`
 - **Offline-ready** kecuali Google Fonts dan gambar Unsplash (ganti ke file lokal jika perlu offline total)
 
 ## Font

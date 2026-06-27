@@ -16,6 +16,14 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 
+/* Atribut hidden harus selalu menang atas .view--center (display:flex) dll. */
+[hidden] { display: none !important; }
+
+/* Tombol upload gambar */
+.uploader { margin: -4px 0 10px; }
+.uploader__btn { font-size: 12px; padding: 6px 12px; }
+.uploader__btn:disabled { opacity: .6; cursor: default; }
+
 body {
   font-family: var(--ff);
   font-size: 14px;
@@ -155,7 +163,18 @@ body {
 .panel__actions { display: flex; gap: 8px; }
 
 fieldset.card { border: 1px solid var(--border); }
-fieldset.card legend { padding: 0 8px; font-size: 12px; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+fieldset.card legend {
+  margin-left: 4px;
+  padding: 5px 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(45, 106, 79, .28);
+}
 
 .grid-2 {
   display: grid;
@@ -176,6 +195,41 @@ fieldset.card legend { padding: 0 8px; font-size: 12px; color: var(--ink-soft); 
   background: #eee;
 }
 .preview:not([src]), .preview[src=""] { display: none; }
+.preview { cursor: zoom-in; }
+
+/* Video preview di admin */
+.vid-preview {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  margin-top: 8px;
+  border-radius: 7px;
+  background: #000;
+}
+.vid-preview:not([src]), .vid-preview[src=""] { display: none; }
+
+/* Audio preview di admin */
+.audio-preview { display: block; width: 100%; margin-top: 8px; }
+.audio-preview:not([src]), .audio-preview[src=""] { display: none; }
+
+/* Popup preview gambar */
+.adm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, .8);
+  cursor: zoom-out;
+}
+.adm-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+}
 
 /* ---- Lists (story/bank) ---- */
 .list { display: flex; flex-direction: column; gap: 12px; }

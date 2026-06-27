@@ -3,7 +3,9 @@
    ========================================================= */
 'use strict';
 
-const WEDDING_DATE = new Date('2025-12-30T07:00:00+07:00').getTime();
+let WEDDING_DATE = new Date('2025-12-30T07:00:00+07:00').getTime();
+// Allow admin data (event.date) to override the countdown target at runtime.
+window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WEDDING_DATE = ms; };
 
 /* ---------- Guest personalization (?to= &address=) ---------- */
 (function personalizeGuest() {
@@ -21,10 +23,126 @@ const WEDDING_DATE = new Date('2025-12-30T07:00:00+07:00').getTime();
   }
 })();
 
+/* ---------- Bind editable content from admin (server API) ----------
+   Halaman tetap menampilkan konten default (hardcoded) sebagai fallback;
+   kalau server hidup, nilai dari wedding.json menimpa konten tsb. */
+(function contentBinding() {
+  if (!window.WeddingAPI) return;
+  window.WeddingAPI.getWedding()
+    .then(applyWeddingData)
+    .catch((err) => console.warn('Wedding data tidak dimuat (pakai konten default):', err.message));
+
+  const esc = (s) => String(s == null ? '' : s)
+    .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const setText = (el, v) => { if (el && v != null && v !== '') el.textContent = v; };
+  const setAttr = (el, name, v) => { if (el && v != null && v !== '') el.setAttribute(name, v); };
+  const setSrc  = (el, v) => { if (el && v) el.src = v; };
+  const digits  = (s) => String(s || '').replace(/\D/g, '');
+
+  function bindPerson(person, social, sel) {
+    if (!person) return;
+    const root = document.querySelector(sel);
+    if (!root) return;
+    setSrc(root.querySelector('.person__main'), person.photo);
+    setText(root.querySelector('.person__nickname'), person.nickname);
+    setText(root.querySelector('.person__fullname'), person.fullname);
+    setText(root.querySelector('.person__parents'), person.parents);
+    if (social && social.instagram) setAttr(root.querySelector('.person__ig'), 'href', social.instagram);
+  }
+
+  function bindStory(stories) {
+    const cards = document.querySelectorAll('#g3dStage .img-container');
+    cards.forEach((card, i) => {
+      const s = stories[i];
+      if (!s) return;   // jumlah kartu 3D tetap; story berlebih diabaikan
+      setSrc(card.querySelector('.card'), s.image);
+      setText(card.querySelector('.card-cap__year'), s.year);
+      setText(card.querySelector('.card-cap__title'), s.title);
+      setText(card.querySelector('.card-cap__body'), s.description);
+    });
+  }
+
+  function bindEventCard(sel, ev, dateLabel) {
+    const card = document.querySelector(sel);
+    if (!card || !ev) return;
+    setSrc(card.querySelector('.event-card__hero'), ev.image);
+    setText(card.querySelector('.event-card__date'), dateLabel);
+    setText(card.querySelector('.event-card__time'), ev.label);
+    setAttr(card.querySelector('.btn-mini'), 'href', ev.mapUrl);
+  }
+
+  function bindBank(banks) {
+    const wrap = document.querySelector('[data-w="bank-cards"]');
+    if (!wrap || !banks.length) return;
+    wrap.innerHTML = banks.map((b, i) => {
+      const id = 'bankNum' + (i + 1);
+      return `
+        <article class="gift-card">
+          <div class="gift-card__head">
+            <span class="gift-card__bank">${esc(b.name)}</span>
+            <span class="gift-card__chip" aria-hidden="true"></span>
+          </div>
+          <p class="gift-card__num" id="${id}">${esc(b.number)}</p>
+          <p class="gift-card__name">a.n. ${esc(b.atasNama)}</p>
+          <button class="btn-copy" data-copy-target="${id}" type="button">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
+            Copy
+          </button>
+        </article>`;
+    }).join('');
+  }
+
+  function applyWeddingData(d) {
+    if (!d) return;
+
+    if (d.cover) setSrc(document.querySelector('.cover__bg'), d.cover.image);
+    if (d.quote) {
+      setSrc(document.querySelector('.quote__ayat'), d.quote.image);
+      setText(document.querySelector('.quote__body'), d.quote.body);
+      setText(document.querySelector('.quote__src'), d.quote.source);
+    }
+    if (d.gift) setSrc(document.querySelector('.gift__photo'), d.gift.image);
+    if (d.video && d.video.src) {
+      const v = document.getElementById('liveStreamVideo');
+      if (v && v.getAttribute('src') !== d.video.src) { v.src = d.video.src; v.load(); }
+    }
+    if (d.music && d.music.src) {
+      const a = document.getElementById('bgMusic');
+      if (a && a.getAttribute('src') !== d.music.src) { a.src = d.music.src; }
+    }
+
+    bindPerson(d.mempelai && d.mempelai.groom, d.socialMedia && d.socialMedia.groom, '[data-person="groom"]');
+    bindPerson(d.mempelai && d.mempelai.bride, d.socialMedia && d.socialMedia.bride, '[data-person="bride"]');
+
+    if (Array.isArray(d.ourStory)) bindStory(d.ourStory);
+
+    const ev = d.event;
+    if (ev) {
+      bindEventCard('[data-event="akad"]', ev.akad, ev.dateLabel);
+      bindEventCard('[data-event="resepsi"]', ev.resepsi, ev.dateLabel);
+      setText(document.querySelector('[data-w="cover-date"]'), ev.dateLabel);
+      const lsLabel = ev.resepsi && ev.resepsi.label ? `${ev.dateLabel} · ${ev.resepsi.label}` : ev.dateLabel;
+      setText(document.querySelector('[data-w="ls-date"]'), lsLabel);
+      if (ev.date) {
+        const t = new Date(ev.date + 'T00:00:00+07:00').getTime();
+        if (!isNaN(t)) window.__setWeddingDate(t);
+      }
+    }
+
+    if (d.alamat) {
+      setText(document.querySelector('[data-w="venue"]'), d.alamat.venue);
+      setText(document.querySelector('[data-w="delivery"]'), d.alamat.deliveryAddress);
+    }
+
+    if (Array.isArray(d.bank)) bindBank(d.bank);
+
+    const wa = d.socialMedia && d.socialMedia.whatsapp;
+    if (wa) setAttr(document.querySelector('[data-w="wa-gift"]'), 'href', 'https://wa.me/' + digits(wa));
+  }
+})();
+
 /* ---------- Petal shower — green, continuous fall + ground pile ---------- */
 (function petalShower() {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
   const field = document.getElementById('petalField');
   if (!field) return;
 
@@ -125,6 +243,7 @@ const WEDDING_DATE = new Date('2025-12-30T07:00:00+07:00').getTime();
 
   btn.addEventListener('click', () => {
     if (typeof window.__petalBurst === 'function') window.__petalBurst();
+    if (typeof window.__startMusic === 'function') window.__startMusic();
     cover.classList.add('is-opening');
     document.body.classList.remove('is-locked');
     main.setAttribute('aria-hidden', 'false');
@@ -134,6 +253,42 @@ const WEDDING_DATE = new Date('2025-12-30T07:00:00+07:00').getTime();
       cover.remove();
     }, 2800);
   });
+})();
+
+/* ---------- Background music ---------- */
+(function bgMusic() {
+  const audio = document.getElementById('bgMusic');
+  const btn   = document.getElementById('musicToggle');
+  if (!audio || !btn) return;
+
+  audio.loop = true;
+  audio.volume = 0.7;
+  let started = false;
+
+  const play = () => { const p = audio.play(); if (p && typeof p.catch === 'function') p.catch(() => {}); };
+  const syncUI = () => {
+    btn.classList.toggle('is-playing', !audio.paused);
+    btn.setAttribute('aria-pressed', String(!audio.paused));
+  };
+
+  // Dipanggil saat "Open Invitation" diklik (gesture user → izin autoplay).
+  window.__startMusic = () => {
+    if (!audio.getAttribute('src')) return;
+    btn.hidden = false;
+    if (!started) { started = true; play(); }
+    syncUI();
+  };
+
+  // Dipakai oleh video: unmute video → pause lagu, mute video → lanjut lagu.
+  window.__musicPause  = () => { if (!audio.paused) audio.pause(); };
+  window.__musicResume = () => { if (started && audio.getAttribute('src') && audio.paused) play(); };
+
+  btn.addEventListener('click', () => {
+    if (audio.paused) play(); else audio.pause();
+    syncUI();
+  });
+  audio.addEventListener('play', syncUI);
+  audio.addEventListener('pause', syncUI);
 })();
 
 /* ---------- Countdown ---------- */
@@ -219,7 +374,7 @@ window.addToCalendar = function addToCalendar() {
   }
 })();
 
-/* ---------- Live Stream video: autoplay when scrolled into view ---------- */
+/* ---------- Video: autoplay (muted) when scrolled into view ---------- */
 (function livestreamAutoplay() {
   const video = document.getElementById('liveStreamVideo');
   if (!video) return;
@@ -232,14 +387,25 @@ window.addToCalendar = function addToCalendar() {
   // browser uses to grant audio permission). Button is the ONLY way to unmute,
   // so it stays visible until the user explicitly taps it.
   if (unmuteBtn) {
+    // Toggle suara; tombol TETAP ada (tidak hilang) sebagai kontrol mute/unmute.
+    const syncBtn = () => {
+      unmuteBtn.classList.toggle('is-muted', video.muted);
+      unmuteBtn.setAttribute('aria-pressed', String(!video.muted));
+      unmuteBtn.setAttribute('aria-label', video.muted ? 'Bunyikan suara' : 'Bisukan suara');
+    };
     unmuteBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      video.muted = false;
-      const p = video.play();
-      if (p && typeof p.catch === 'function') p.catch(() => {});
-      unmuteBtn.classList.add('is-hidden');
-      setTimeout(() => { if (unmuteBtn.parentNode) unmuteBtn.remove(); }, 320);
+      video.muted = !video.muted;
+      if (!video.muted) {
+        const p = video.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+        if (typeof window.__musicPause === 'function') window.__musicPause();   // unmute video → pause lagu
+      } else {
+        if (typeof window.__musicResume === 'function') window.__musicResume(); // mute video → lanjut lagu
+      }
+      syncBtn();
     });
+    syncBtn();
   }
 
   // Autoplay (muted) when the video scrolls into view; pause when it leaves.
@@ -397,7 +563,7 @@ document.addEventListener('click', async (e) => {
   const stage = document.getElementById('g3dStage');
   if (!scene || !stage) return;
 
-  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduceMotion = false;   // animasi dipaksa selalu jalan (abaikan setting OS)
 
   let rot = 0;                  // current rotation in degrees
   let velocity = 0;             // deg/ms (for flick momentum)

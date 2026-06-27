@@ -17,11 +17,23 @@ const ROOT       = __dirname;
 const DATA_PATH  = path.join(ROOT, 'data', 'wedding.json');
 const BACKUP_DIR = path.join(ROOT, 'data', 'backup');
 const ADMIN_DIR  = path.join(ROOT, 'admin');
+const UPLOAD_DIR = path.join(ROOT, 'assets', 'uploads');
+const UPLOAD_MAX = 8 * 1024 * 1024;            // 8 MB (gambar)
+const VIDEO_MAX  = 60 * 1024 * 1024;           // 60 MB (video)
+const AUDIO_MAX  = 20 * 1024 * 1024;           // 20 MB (audio)
+const UPLOAD_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+const VIDEO_TYPES  = { 'video/mp4': 'mp4', 'video/webm': 'webm', 'video/ogg': 'ogv', 'video/quicktime': 'mov' };
+const AUDIO_TYPES  = { 'audio/mpeg': 'mp3', 'audio/mp3': 'mp3', 'audio/ogg': 'ogg', 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/mp4': 'm4a', 'audio/x-m4a': 'm4a' };
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const sessions = new Map();
 
 app.use(cors());
+
+// Image upload (admin only). Registered BEFORE the global 256kb JSON parser so
+// its own larger body limit applies to base64 image payloads.
+app.post('/api/admin/upload', requireAuth, express.json({ limit: '85mb' }), handleUpload);
+
 app.use(express.json({ limit: '256kb' }));
 
 let writeQueue = Promise.resolve();
@@ -148,6 +160,35 @@ function buildStats(comments) {
   return { hadir, absen, total: comments.length };
 }
 
+/* ---------- image upload (base64 data URL → file) ---------- */
+async function handleUpload(req, res) {
+  try {
+    const data = req.body && typeof req.body.data === 'string' ? req.body.data : '';
+    const m = /^data:([^;]+);base64,(.+)$/s.exec(data);
+    if (!m) return res.status(400).json({ error: 'Field "data" harus berupa data URL base64' });
+    const mime = m[1].toLowerCase();
+    const ext  = UPLOAD_TYPES[mime] || VIDEO_TYPES[mime] || AUDIO_TYPES[mime];
+    if (!ext) return res.status(400).json({ error: 'Tipe harus gambar (JPG/PNG/WebP/GIF), video (MP4/WebM/OGG/MOV), atau audio (MP3/OGG/WAV/M4A)' });
+
+    const buf = Buffer.from(m[2], 'base64');
+    if (!buf.length) return res.status(400).json({ error: 'File kosong' });
+    const max = UPLOAD_TYPES[mime] ? UPLOAD_MAX : VIDEO_TYPES[mime] ? VIDEO_MAX : AUDIO_MAX;
+    if (buf.length > max) return res.status(413).json({ error: `Ukuran maksimal ${Math.round(max / 1048576)} MB` });
+
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    const raw  = String((req.body && req.body.filename) || 'img');
+    const base = raw.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '').slice(0, 40) || 'img';
+    const name = `${base}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+    await fs.writeFile(path.join(UPLOAD_DIR, name), buf);
+
+    res.json({ ok: true, url: `/assets/uploads/${name}` });
+  } catch (e) {
+    console.error('POST /api/admin/upload error:', e);
+    res.status(500).json({ error: 'Gagal mengunggah file' });
+  }
+}
+
 /* ============== PUBLIC API ============== */
 
 app.get('/api/health', (req, res) => {
@@ -260,6 +301,11 @@ function validateAdminPayload(payload) {
       }
     }
   }
+  if (payload.cover !== undefined && !isObject(payload.cover)) return 'cover harus object';
+  if (payload.quote !== undefined && !isObject(payload.quote)) return 'quote harus object';
+  if (payload.gift !== undefined && !isObject(payload.gift)) return 'gift harus object';
+  if (payload.video !== undefined && !isObject(payload.video)) return 'video harus object';
+  if (payload.music !== undefined && !isObject(payload.music)) return 'music harus object';
   if (payload.alamat !== undefined && !isObject(payload.alamat)) return 'alamat harus object';
   if (payload.event !== undefined && !isObject(payload.event)) return 'event harus object';
   if (payload.ourStory !== undefined && !Array.isArray(payload.ourStory)) return 'ourStory harus array';
@@ -275,7 +321,7 @@ app.put('/api/admin/data', requireAuth, async (req, res) => {
   try {
     const data = await withWriteLock(async () => {
       const current = await readData();
-      const ALLOWED = ['mempelai', 'alamat', 'event', 'ourStory', 'bank', 'socialMedia'];
+      const ALLOWED = ['cover', 'quote', 'gift', 'video', 'music', 'mempelai', 'alamat', 'event', 'ourStory', 'bank', 'socialMedia'];
       for (const key of ALLOWED) {
         if (req.body[key] !== undefined) current[key] = req.body[key];
       }

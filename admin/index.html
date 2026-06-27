@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin · Undangan Eka & Salsa</title>
-  <link rel="stylesheet" href="admin.css" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/admin/admin.css" />
 </head>
 <body>
 
@@ -45,7 +46,8 @@
     </header>
 
     <nav class="tabs">
-      <button class="tab is-active" data-tab="mempelai">Mempelai</button>
+      <button class="tab is-active" data-tab="opening">Media</button>
+      <button class="tab" data-tab="mempelai">Mempelai</button>
       <button class="tab" data-tab="alamat">Alamat</button>
       <button class="tab" data-tab="event">Event</button>
       <button class="tab" data-tab="story">Our Story</button>
@@ -56,8 +58,51 @@
 
     <main class="content">
 
+      <!-- Cover & Quote -->
+      <div class="panel is-active" data-panel="opening">
+        <div class="panel__head">
+          <h2>Media — Cover · Quote · Gift · Video</h2>
+          <button class="btn btn--primary" data-save="opening">Simpan</button>
+        </div>
+        <div class="grid-2">
+          <fieldset class="card">
+            <legend>Gambar Opening (Cover)</legend>
+            <label class="field"><span>URL Gambar</span><input data-bind="cover.image" /></label>
+            <img class="preview" data-preview="cover.image" alt="" />
+          </fieldset>
+
+          <fieldset class="card">
+            <legend>Quote / Ayat</legend>
+            <label class="field"><span>Gambar Ayat (URL)</span><input data-bind="quote.image" /></label>
+            <img class="preview" data-preview="quote.image" alt="" />
+            <label class="field"><span>Teks Quote</span><textarea rows="5" data-bind="quote.body"></textarea></label>
+            <label class="field"><span>Sumber (mis. QS. Ar-Rum: 21)</span><input data-bind="quote.source" /></label>
+          </fieldset>
+        </div>
+
+        <fieldset class="card">
+          <legend>Wedding Gift</legend>
+          <label class="field"><span>Gambar Hadiah (URL)</span><input data-bind="gift.image" /></label>
+          <img class="preview" data-preview="gift.image" alt="" />
+        </fieldset>
+
+        <fieldset class="card">
+          <legend>Video</legend>
+          <label class="field"><span>File Video (URL)</span><input data-bind="video.src" data-upload="video" /></label>
+          <small style="color:var(--ink-soft)">MP4/WebM, maks 60MB. Klik “⤴ Upload video” untuk ganti. Preview di bawah bisa diputar sebelum disimpan.</small>
+          <video class="vid-preview" data-preview-video="video.src" controls preload="metadata" playsinline></video>
+        </fieldset>
+
+        <fieldset class="card">
+          <legend>Lagu / Backsound</legend>
+          <label class="field"><span>File Lagu (URL)</span><input data-bind="music.src" data-upload="audio" /></label>
+          <small style="color:var(--ink-soft)">MP3/OGG/WAV, maks 20MB. Otomatis diputar saat tamu klik “Open Invitation”. Preview di bawah bisa dicoba dulu.</small>
+          <audio class="audio-preview" data-preview-audio="music.src" controls preload="metadata"></audio>
+        </fieldset>
+      </div>
+
       <!-- Mempelai -->
-      <div class="panel is-active" data-panel="mempelai">
+      <div class="panel" data-panel="mempelai">
         <div class="panel__head">
           <h2>Mempelai</h2>
           <button class="btn btn--primary" data-save="mempelai">Simpan</button>
@@ -108,7 +153,6 @@
           <legend>Umum</legend>
           <label class="field"><span>Tanggal (YYYY-MM-DD)</span><input data-bind="event.date" /></label>
           <label class="field"><span>Label Tanggal</span><input data-bind="event.dateLabel" /></label>
-          <label class="field"><span>Timezone</span><input data-bind="event.timezone" /></label>
         </fieldset>
         <div class="grid-2">
           <fieldset class="card">
@@ -117,6 +161,8 @@
             <label class="field"><span>Label Jam</span><input data-bind="event.akad.label" /></label>
             <label class="field"><span>Lokasi</span><input data-bind="event.akad.location" /></label>
             <label class="field"><span>Map URL</span><input data-bind="event.akad.mapUrl" /></label>
+            <label class="field"><span>Gambar (URL)</span><input data-bind="event.akad.image" /></label>
+            <img class="preview" data-preview="event.akad.image" alt="" />
           </fieldset>
           <fieldset class="card">
             <legend>Resepsi</legend>
@@ -124,6 +170,8 @@
             <label class="field"><span>Label Jam</span><input data-bind="event.resepsi.label" /></label>
             <label class="field"><span>Lokasi</span><input data-bind="event.resepsi.location" /></label>
             <label class="field"><span>Map URL</span><input data-bind="event.resepsi.mapUrl" /></label>
+            <label class="field"><span>Gambar (URL)</span><input data-bind="event.resepsi.image" /></label>
+            <img class="preview" data-preview="event.resepsi.image" alt="" />
           </fieldset>
         </div>
       </div>
@@ -180,6 +228,11 @@
     <div id="toast" class="toast" hidden></div>
   </section>
 
-  <script src="admin.js"></script>
+  <!-- Popup preview gambar -->
+  <div id="admLightbox" class="adm-lightbox" hidden>
+    <img id="admLightboxImg" src="" alt="Preview" />
+  </div>
+
+  <script src="/admin/admin.js"></script>
 </body>
 </html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="#1A1A1A"/>
+  <text x="50%" y="50%" dy="0.02em" text-anchor="middle" dominant-baseline="central"
+        font-family="'Playfair Display', 'Cormorant Garamond', Georgia, serif"
+        font-style="italic" font-weight="600" font-size="30" fill="#FFFFFF">
+    E<tspan font-size="20" dy="-1" fill="#CFC6B8">&amp;</tspan>S
+  </text>
+</svg>

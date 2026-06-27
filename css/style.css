@@ -500,11 +500,6 @@ em { font-style: italic; }
   text-shadow: 0 1px 4px rgba(0, 0, 0, .4);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .quote__deco--left,
-  .quote__deco--right { animation: none; }
-}
-
 /* =========================================================
    CAROUSEL (Our Love Story)
    ========================================================= */
@@ -619,7 +614,7 @@ em { font-style: italic; }
 
   background:
     linear-gradient(rgba(232, 232, 232, .2), rgba(232, 232, 232, .2)),
-    url('https://inv.punakawandigital.id/wp-content/uploads/2025/11/BACKGROUND-GREEN-PII.webp') center/cover no-repeat;
+    url('../assets/decor/BACKGROUND-GREEN-PII.webp') center/cover no-repeat;
 }
 
 /* Decorative horizontal frame borders (FRAME6) — full-width, thin fixed height */
@@ -811,7 +806,7 @@ em { font-style: italic; }
 .person__nickname {
   font-family: var(--ff-serif);
   font-style: italic;
-  font-weight: 500;
+  font-weight: 600;
   font-size: clamp(2.2rem, 9vw, 2.8rem);
   line-height: 1;
   color: var(--ink);
@@ -826,7 +821,7 @@ em { font-style: italic; }
   line-height: 1.25;
   color: var(--ink);
   margin-bottom: .7rem;
-  opacity: .85;
+  opacity: .95;
   letter-spacing: .005em;
 }
 .person__parents {
@@ -834,7 +829,7 @@ em { font-style: italic; }
   font-style: italic;
   font-size: 12.5px;
   line-height: 1.7;
-  color: var(--ink-muted);
+  color: #3d3d3d;
   margin-bottom: .9rem;
 }
 .person__ig {
@@ -865,9 +860,6 @@ em { font-style: italic; }
   letter-spacing: .02em;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .person__deco { animation: none !important; }
-}
 
 /* =========================================================
    EVENTS
@@ -980,9 +972,6 @@ em { font-style: italic; }
   transform: scale(1) translateY(0);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .events__deco { animation: none; }
-}
 
 .events__grid {
   display: grid;
@@ -1051,7 +1040,7 @@ em { font-style: italic; }
 
   background:
     linear-gradient(rgba(232, 232, 232, .2), rgba(232, 232, 232, .2)),
-    url('https://inv.punakawandigital.id/wp-content/uploads/2025/11/BACKGROUND-GREEN-PII.webp') center/cover no-repeat;
+    url('../assets/decor/BACKGROUND-GREEN-PII.webp') center/cover no-repeat;
 }
 
 .countdown__grid {
@@ -1110,53 +1099,69 @@ em { font-style: italic; }
   object-fit: cover;
 }
 
-/* Unmute button — sibling of the video, shown by default; JS hides it on unmute */
+/* Sound toggle — icon-only, persistent (tetap ada walau sudah di-klik) */
 .livestream__unmute {
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
   margin: -.3rem auto .9rem;
-  padding: .55rem 1rem .55rem .8rem;
+  padding: 0;
   border: none;
-  border-radius: 999px;
+  border-radius: 50%;
   background: #0f2418;
   color: #fff;
-  font-family: var(--ff-sans);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .1em;
-  text-transform: uppercase;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(15, 36, 24, .35);
-  transition: opacity .3s var(--ease-soft), transform .3s var(--ease-soft), background .25s;
-  animation: unmutePulse 1.8s ease-in-out infinite;
+  transition: transform .25s var(--ease-soft), background .25s;
 }
-.livestream__unmute:hover,
-.livestream__unmute:active { background: #000; }
-.livestream__unmute svg,
-.livestream__unmute span {
-  pointer-events: none;   /* ensure taps always land on the <button> itself */
-}
+.livestream__unmute:hover { background: #000; }
+.livestream__unmute:active { transform: scale(.92); }
 .livestream__unmute svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
+  pointer-events: none;   /* taps selalu mendarat di <button> */
 }
-.livestream__unmute.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(.85);
-  animation: none;
-}
+/* tukar ikon sesuai status: muted ↔ on */
+.livestream__unmute .ico--on { display: none; }
+.livestream__unmute:not(.is-muted) .ico--muted { display: none; }
+.livestream__unmute:not(.is-muted) .ico--on { display: block; }
+/* pulse hanya saat masih muted, sebagai ajakan menyalakan suara */
+.livestream__unmute.is-muted { animation: unmutePulse 1.8s ease-in-out infinite; }
 
 @keyframes unmutePulse {
   0%, 100% { box-shadow: 0 4px 14px rgba(15, 36, 24, .35), 0 0 0 0 rgba(15, 36, 24, .35); }
   50%      { box-shadow: 0 4px 14px rgba(15, 36, 24, .35), 0 0 0 10px rgba(15, 36, 24, 0); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .livestream__unmute { animation: none; }
+/* Floating background-music toggle */
+.music-toggle {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 36, 24, .9);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
 }
+.music-toggle svg { width: 19px; height: 19px; pointer-events: none; }
+.music-toggle.is-playing svg { animation: musicSpin 3.5s linear infinite; }
+.music-toggle:not(.is-playing) svg { opacity: .55; }
+@keyframes musicSpin { to { transform: rotate(360deg); } }
+
 .livestream__date {
   font-family: var(--ff-serif);
   font-style: italic;
@@ -1177,7 +1182,7 @@ em { font-style: italic; }
 
   background:
     linear-gradient(rgba(232, 232, 232, .2), rgba(232, 232, 232, .2)),
-    url('https://inv.punakawandigital.id/wp-content/uploads/2025/11/BACKGROUND-GREEN-PII.webp') center/cover no-repeat;
+    url('../assets/decor/BACKGROUND-GREEN-PII.webp') center/cover no-repeat;
 }
 
 .rsvp-wishes__grid {
@@ -1650,9 +1655,6 @@ em { font-style: italic; }
   100%{ transform: translate(var(--landX), calc(100vh - var(--landY)))         rotate(var(--landRot)) scale(1); opacity: .95; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .petal { display: none; }
-}
 
 /* =========================================================
    LIGHTBOX
@@ -1916,17 +1918,3 @@ em { font-style: italic; }
   .story .card-cap__body { font-size: 11px; }
 }
 
-/* =========================================================
-   REDUCED MOTION
-   ========================================================= */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  [data-reveal] { opacity: 1; transform: none; }
-  .cover__bg { animation: none; }
-  .carousel__track { scroll-behavior: auto; }
-}

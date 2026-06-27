@@ -148,16 +148,29 @@ function bindAll() {
     const val = getPath(weddingData, img.dataset.preview);
     if (val) img.src = val; else img.removeAttribute('src');
   });
-  // Live preview update for photo URLs
-  $$('input[data-bind$=".photo"]').forEach(input => {
-    input.oninput = () => {
-      const preview = $(`[data-preview="${input.dataset.bind}"]`);
-      if (preview) {
-        if (input.value) preview.src = input.value;
-        else preview.removeAttribute('src');
-      }
-    };
+  $$('[data-preview-video]').forEach(v => {
+    const val = getPath(weddingData, v.dataset.previewVideo);
+    if (val) v.src = val; else v.removeAttribute('src');
   });
+  $$('[data-preview-audio]').forEach(a => {
+    const val = getPath(weddingData, a.dataset.previewAudio);
+    if (val) a.src = val; else a.removeAttribute('src');
+  });
+  // Live preview update untuk URL gambar/video/audio
+  $$('input[data-bind$=".photo"], input[data-bind$=".image"], input[data-upload="video"], input[data-upload="audio"]').forEach(input => {
+    input.oninput = () => syncPreview(input.dataset.bind, input.value);
+  });
+  enhanceUploaders();
+}
+
+// Update preview gambar/video/audio untuk satu bind path.
+function syncPreview(bind, val) {
+  const img = $(`[data-preview="${bind}"]`);
+  if (img) { if (val) img.src = val; else img.removeAttribute('src'); }
+  const vid = $(`[data-preview-video="${bind}"]`);
+  if (vid) { if (val) vid.src = val; else vid.removeAttribute('src'); }
+  const aud = $(`[data-preview-audio="${bind}"]`);
+  if (aud) { if (val) aud.src = val; else aud.removeAttribute('src'); }
 }
 
 function collectBinds(prefix) {
@@ -170,6 +183,73 @@ function collectBinds(prefix) {
   return getPath(out, prefix);
 }
 
+/* ---------- Image upload ---------- */
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve(r.result);
+    r.onerror = () => reject(new Error('Gagal membaca file'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function uploadFile(file) {
+  const data = await fileToDataURL(file);
+  const res  = await api('/api/admin/upload', { method: 'POST', body: { filename: file.name, data } });
+  return res.url;
+}
+
+// Konfigurasi per jenis media
+const UPLOAD_KINDS = {
+  image: { max: 8,  accept: 'image/png,image/jpeg,image/webp,image/gif',          label: '⤴ Upload gambar', busy: 'Mengunggah…',       done: 'Gambar terunggah' },
+  video: { max: 60, accept: 'video/mp4,video/webm,video/ogg,video/quicktime',     label: '⤴ Upload video',  busy: 'Mengunggah video…', done: 'Video terunggah' },
+  audio: { max: 20, accept: 'audio/mpeg,audio/ogg,audio/wav,audio/mp4,audio/x-m4a', label: '⤴ Upload lagu',  busy: 'Mengunggah lagu…',  done: 'Lagu terunggah' }
+};
+
+// Pasang tombol "Upload" pada setiap input gambar/video/audio.
+function enhanceUploaders(root = document) {
+  const sel = 'input[data-bind$=".photo"], input[data-bind$=".image"], input[data-story-field="image"], input[data-upload="video"], input[data-upload="audio"]';
+  $$(sel, root).forEach(input => {
+    if (input.dataset.uploader) return;
+    input.dataset.uploader = '1';
+    const kind = input.dataset.upload === 'video' ? 'video' : input.dataset.upload === 'audio' ? 'audio' : 'image';
+    const conf = UPLOAD_KINDS[kind];
+
+    const wrap = document.createElement('div');
+    wrap.className = 'uploader';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn--ghost uploader__btn';
+    btn.textContent = conf.label;
+    const file = document.createElement('input');
+    file.type = 'file';
+    file.accept = conf.accept;
+    file.hidden = true;
+    wrap.append(btn, file);
+    (input.closest('.field') || input).insertAdjacentElement('afterend', wrap);
+
+    btn.addEventListener('click', () => file.click());
+    file.addEventListener('change', async () => {
+      const f = file.files && file.files[0];
+      if (!f) return;
+      if (f.size > conf.max * 1024 * 1024) { toast(`File maksimal ${conf.max}MB`, 'error'); file.value = ''; return; }
+      const orig = btn.textContent;
+      btn.disabled = true; btn.textContent = conf.busy;
+      try {
+        const url = await uploadFile(f);
+        input.value = url;
+        input.dispatchEvent(new Event('input', { bubbles: true })); // update preview
+        toast(conf.done);
+      } catch (err) {
+        toast('Upload gagal: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = orig;
+        file.value = '';
+      }
+    });
+  });
+}
+
 /* ---------- Our Story (dynamic list) ---------- */
 const storyList = $('#storyList');
 
@@ -177,6 +257,7 @@ function renderStory() {
   const items = Array.isArray(weddingData.ourStory) ? weddingData.ourStory : [];
   storyList.innerHTML = items.map((s, i) => storyRowHTML(s, i)).join('') ||
     '<p class="empty">Belum ada story. Klik "+ Tambah Story" untuk menambah.</p>';
+  enhanceUploaders(storyList);
 }
 
 function storyRowHTML(s = {}, i) {
@@ -191,6 +272,7 @@ function storyRowHTML(s = {}, i) {
         <label class="field"><span>Title</span><input data-story-field="title" data-story-i="${i}" value="${escapeAttr(s.title || '')}" /></label>
         <label class="field full"><span>Description</span><textarea rows="2" data-story-field="description" data-story-i="${i}">${escapeHtml(s.description || '')}</textarea></label>
         <label class="field full"><span>Image URL</span><input data-story-field="image" data-story-i="${i}" value="${escapeAttr(s.image || '')}" /></label>
+        <div class="field full"><img class="preview" data-story-thumb="${i}" ${s.image ? `src="${escapeAttr(s.image)}"` : ''} alt="" /></div>
       </div>
     </div>
   `;
@@ -219,6 +301,14 @@ storyList.addEventListener('click', (e) => {
   }
 });
 
+// Update thumbnail saat URL gambar story diubah (ketik / hasil upload).
+storyList.addEventListener('input', (e) => {
+  const inp = e.target.closest('[data-story-field="image"]');
+  if (!inp) return;
+  const thumb = $(`[data-story-thumb="${inp.dataset.storyI}"]`, storyList);
+  if (thumb) { if (inp.value) thumb.src = inp.value; else thumb.removeAttribute('src'); }
+});
+
 $('[data-action="story-add"]').addEventListener('click', () => {
   weddingData.ourStory = collectStory();
   weddingData.ourStory.push({ year: '', title: '', description: '', image: '' });
@@ -244,8 +334,7 @@ function bankRowHTML(b = {}, i) {
       <div class="row-card__grid">
         <label class="field"><span>Bank</span><input data-bank-field="name" data-bank-i="${i}" value="${escapeAttr(b.name || '')}" /></label>
         <label class="field"><span>Atas Nama</span><input data-bank-field="atasNama" data-bank-i="${i}" value="${escapeAttr(b.atasNama || '')}" /></label>
-        <label class="field"><span>Nomor (raw)</span><input data-bank-field="number" data-bank-i="${i}" value="${escapeAttr(b.number || '')}" /></label>
-        <label class="field"><span>Nomor (formatted)</span><input data-bank-field="numberFormatted" data-bank-i="${i}" value="${escapeAttr(b.numberFormatted || '')}" /></label>
+        <label class="field"><span>Nomor Rekening</span><input data-bank-field="number" data-bank-i="${i}" value="${escapeAttr(b.number || '')}" /></label>
       </div>
     </div>
   `;
@@ -256,10 +345,9 @@ function collectBank() {
   return rows.map(row => {
     const i = row.dataset.bankRow;
     return {
-      name:            $(`[data-bank-field="name"][data-bank-i="${i}"]`, row)?.value || '',
-      number:          $(`[data-bank-field="number"][data-bank-i="${i}"]`, row)?.value || '',
-      numberFormatted: $(`[data-bank-field="numberFormatted"][data-bank-i="${i}"]`, row)?.value || '',
-      atasNama:        $(`[data-bank-field="atasNama"][data-bank-i="${i}"]`, row)?.value || ''
+      name:     $(`[data-bank-field="name"][data-bank-i="${i}"]`, row)?.value || '',
+      number:   $(`[data-bank-field="number"][data-bank-i="${i}"]`, row)?.value || '',
+      atasNama: $(`[data-bank-field="atasNama"][data-bank-i="${i}"]`, row)?.value || ''
     };
   });
 }
@@ -356,6 +444,9 @@ document.addEventListener('click', (e) => {
   if (!btn) return;
   const which = btn.dataset.save;
 
+  if (which === 'opening') {
+    return saveSection({ cover: collectBinds('cover'), quote: collectBinds('quote'), gift: collectBinds('gift'), video: collectBinds('video'), music: collectBinds('music') }, 'Media');
+  }
   if (which === 'mempelai') {
     return saveSection({ mempelai: collectBinds('mempelai') }, 'Mempelai');
   }
@@ -389,6 +480,23 @@ function formatTime(ts) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
+
+/* ---------- Image preview popup ---------- */
+(function previewLightbox() {
+  const lb  = $('#admLightbox');
+  const img = $('#admLightboxImg');
+  if (!lb || !img) return;
+  document.addEventListener('click', (e) => {
+    const thumb = e.target.closest('img.preview');
+    if (thumb && thumb.getAttribute('src')) {
+      img.src = thumb.src;
+      lb.hidden = false;
+    }
+  });
+  const close = () => { lb.hidden = true; img.removeAttribute('src'); };
+  lb.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lb.hidden) close(); });
+})();
 
 /* ---------- Init ---------- */
 checkAuth();
