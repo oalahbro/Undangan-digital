@@ -7,6 +7,7 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
+const store  = require('./lib/tenant-store');
 
 const app = express();
 app.set('trust proxy', true);   // hormati X-Forwarded-Proto/Host dari reverse proxy (Caddy) & Tailscale
@@ -15,6 +16,12 @@ const PORT = process.env.PORT || 3000;
 // Domain dasar produksi (mis. undanganku.com). Subdomain di bawahnya = slug client.
 const BASE_DOMAIN = (process.env.BASE_DOMAIN || '').toLowerCase();
 const RESERVED_SUBS = new Set(['www', 'panel', 'app', 'api', 'admin', 'mail', 'ftp']);
+
+// Super-admin panel (URL dari .env SUPERADMIN_PATH, mis. /mgmt-x7k2)
+const SA_PATH    = (process.env.SUPERADMIN_PATH || '').replace(/\/+$/, '');
+const SA_PASS    = process.env.SUPERADMIN_PASS  || '';
+const SA_TTL_MS  = 4 * 60 * 60 * 1000;   // 4 jam
+const saSessions = new Map();
 
 const ROOT        = __dirname;
 const DATA_DIR    = path.join(ROOT, 'data', 'tenants');          // data/tenants/<slug>.json
@@ -164,6 +171,29 @@ function clearSessionCookie(res) {
   res.setHeader('Set-Cookie', 'admin_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
 }
 // Auth sah hanya jika sesi cocok dengan tenant yang sedang diakses.
+
+/* ============== SUPER-ADMIN SESSION ============== */
+function saCreateSession() {
+  const id = crypto.randomBytes(24).toString('hex');
+  saSessions.set(id, { expiresAt: Date.now() + SA_TTL_MS });
+  return id;
+}
+function saGetSession(req) {
+  const id = parseCookies(req).sa_session;
+  if (!id) return null;
+  const s = saSessions.get(id);
+  if (!s || s.expiresAt < Date.now()) { saSessions.delete(id); return null; }
+  return s;
+}
+function requireSA(req, res, next) {
+  if (!saGetSession(req)) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
+function timingSafeEq(a, b) {
+  const ab = Buffer.from(String(a)), bb = Buffer.from(String(b));
+  if (ab.length !== bb.length) { crypto.timingSafeEqual(Buffer.alloc(1), Buffer.alloc(1)); return false; }
+  return crypto.timingSafeEqual(ab, bb);
+}
 function requireAuth(req, res, next) {
   const s = getSession(req);
   if (!s || !req.tenant || s.tenant !== req.tenant) {
@@ -438,6 +468,65 @@ app.get('/t/:slug', async (req, res) => {
 
 app.get('/admin', (req, res) => res.sendFile(path.join(ADMIN_DIR, 'index.html')));
 app.use('/admin', express.static(ADMIN_DIR));
+
+/* ---------- super-admin panel (URL dari env SUPERADMIN_PATH) ---------- */
+if (SA_PATH) {
+  const saRouter = express.Router();
+
+  saRouter.get('/', (req, res) => res.sendFile(path.join(ROOT, 'super-admin', 'index.html')));
+
+  saRouter.post('/login', (req, res) => {
+    if (!SA_PASS) return res.status(503).json({ error: 'SUPERADMIN_PASS belum diset di .env' });
+    const pw = (req.body && typeof req.body.password === 'string') ? req.body.password : '';
+    if (!pw || !timingSafeEq(pw, SA_PASS)) return res.status(401).json({ error: 'Password salah' });
+    const id = saCreateSession();
+    res.setHeader('Set-Cookie',
+      `sa_session=${id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(SA_TTL_MS / 1000)}`);
+    res.json({ ok: true });
+  });
+
+  saRouter.post('/logout', (req, res) => {
+    const id = parseCookies(req).sa_session;
+    if (id) saSessions.delete(id);
+    res.setHeader('Set-Cookie', 'sa_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
+    res.json({ ok: true });
+  });
+
+  saRouter.get('/api/me', (req, res) => res.json({ ok: !!saGetSession(req) }));
+
+  saRouter.get('/api/tenants', requireSA, (req, res) => {
+    try { res.json(store.listTenants()); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  saRouter.post('/api/tenants', requireSA, (req, res) => {
+    const { slug, name, password } = req.body || {};
+    try { res.status(201).json(store.createTenant(slug, name, password)); }
+    catch (e) { res.status(400).json({ error: e.message }); }
+  });
+
+  saRouter.patch('/api/tenants/:slug/password', requireSA, (req, res) => {
+    const { password } = req.body || {};
+    try { res.json(store.setPassword(req.params.slug, password || undefined)); }
+    catch (e) { res.status(400).json({ error: e.message }); }
+  });
+
+  saRouter.post('/api/tenants/:slug/domain', requireSA, (req, res) => {
+    const { domain } = req.body || {};
+    try { res.json(store.addDomain(req.params.slug, domain)); }
+    catch (e) { res.status(400).json({ error: e.message }); }
+  });
+
+  saRouter.delete('/api/tenants/:slug', requireSA, (req, res) => {
+    try { res.json({ ok: true, ...store.removeTenant(req.params.slug) }); }
+    catch (e) { res.status(400).json({ error: e.message }); }
+  });
+
+  app.use(SA_PATH, saRouter);
+  console.log(`Super-admin: http://localhost:${PORT}${SA_PATH}`);
+} else {
+  console.log('Super-admin: SUPERADMIN_PATH tidak diset (dinonaktifkan)');
+}
 
 // Jangan expose index.html — redirect ke root (query dipertahankan).
 app.get(['/index.html', '/index.htm'], (req, res) => {
