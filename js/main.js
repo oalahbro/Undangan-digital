@@ -7,19 +7,12 @@ let WEDDING_DATE = new Date('2025-12-30T07:00:00+07:00').getTime();
 // Allow admin data (event.date) to override the countdown target at runtime.
 window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WEDDING_DATE = ms; };
 
-/* ---------- Guest personalization (?to= &address=) ---------- */
+/* ---------- Guest personalization (?to=) ---------- */
 (function personalizeGuest() {
-  const params = new URLSearchParams(location.search);
-  const to   = params.get('to');
-  const addr = params.get('address') || params.get('addr');
-
+  const to = new URLSearchParams(location.search).get('to');
   if (to) {
     const el = document.getElementById('guestName');
     if (el) el.textContent = decodeURIComponent(to);
-  }
-  if (addr) {
-    const el = document.getElementById('guestAddr');
-    if (el) el.textContent = 'at ' + decodeURIComponent(addr);
   }
 })();
 

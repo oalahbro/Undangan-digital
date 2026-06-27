@@ -56,11 +56,11 @@ Setiap field gambar/video/lagu punya tombol **"⤴ Upload"** (file disimpan ke `
 
 ## Personalisasi Nama Tamu
 
-Tambahkan query parameter `?to=` dan `?address=` di URL. Pakai root `/` (tanpa `index.html`):
+Tambahkan query parameter `?to=` di URL. Pakai root `/` (tanpa `index.html`):
 ```
-http://localhost:3000/?to=Bapak%20Joris&address=Jakarta
+http://localhost:3000/?to=Bapak%20Joris
 ```
-Nama dan alamat tamu akan otomatis muncul di cover.
+Nama tamu akan otomatis muncul di cover.
 
 > URL `/index.html?...` otomatis di-redirect ke `/?...` oleh server, jadi `index.html` tidak pernah muncul di link yang disebar.
 
