@@ -361,6 +361,13 @@ app.get('/admin', (req, res) => {
 });
 app.use('/admin', express.static(ADMIN_DIR));
 
+// Jangan expose index.html di URL — redirect ke root (query string dipertahankan).
+// http://host/index.html?to=Joris  ->  http://host/?to=Joris
+app.get(['/index.html', '/index.htm'], (req, res) => {
+  const i = req.originalUrl.indexOf('?');
+  res.redirect(302, i >= 0 ? '/' + req.originalUrl.slice(i) : '/');
+});
+
 app.use(express.static(ROOT, { index: 'index.html' }));
 
 app.listen(PORT, () => {
