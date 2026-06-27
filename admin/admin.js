@@ -506,7 +506,8 @@ function formatTime(ts) {
   const countEl    = $('#guestCount');
   if (!baseInput || !namesInput || !result) return;
 
-  baseInput.value = localStorage.getItem('guestBaseUrl') || location.origin;
+  // Auto: ambil domain yang sedang dibuka. User tetap bisa override manual.
+  baseInput.value = location.origin;
 
   let rows = [];   // [{ name, url }]
 
@@ -516,7 +517,7 @@ function formatTime(ts) {
   };
 
   function generate() {
-    localStorage.setItem('guestBaseUrl', baseInput.value.trim());
+    if (!baseInput.value.trim()) baseInput.value = location.origin;
     const names = namesInput.value.split('\n').map(s => s.trim()).filter(Boolean);
     // buang duplikat, pertahankan urutan
     const seen = new Set();
