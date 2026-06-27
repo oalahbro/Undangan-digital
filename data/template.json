@@ -1,0 +1,44 @@
+{
+  "cover": {
+    "image": "https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=85"
+  },
+  "quote": {
+    "image": "",
+    "body": "“Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.”",
+    "source": "(QS. Ar-Rum: 21)"
+  },
+  "gift": {
+    "image": "https://images.unsplash.com/photo-1549417229-aa67d3263c09?w=900&q=85"
+  },
+  "video": { "src": "" },
+  "music": { "src": "/assets/lagu-dummy.mp3" },
+  "mempelai": {
+    "groom": { "nickname": "Mempelai Pria", "fullname": "Nama Lengkap Pria", "parents": "Putra dari Bpk. ... & Ibu ...", "photo": "", "bio": "" },
+    "bride": { "nickname": "Mempelai Wanita", "fullname": "Nama Lengkap Wanita", "parents": "Putri dari Bpk. ... & Ibu ...", "photo": "", "bio": "" }
+  },
+  "alamat": {
+    "venue": "Nama & alamat venue",
+    "mapUrl": "https://maps.google.com",
+    "deliveryAddress": "Alamat pengiriman hadiah"
+  },
+  "event": {
+    "date": "2026-01-01",
+    "dateLabel": "Tanggal Acara",
+    "timezone": "WIB",
+    "akad": { "time": "08:00", "label": "08.00 WIB", "location": "Lokasi akad", "mapUrl": "https://maps.google.com", "image": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=700&q=85" },
+    "resepsi": { "time": "11:00", "label": "11.00 WIB", "location": "Lokasi resepsi", "mapUrl": "https://maps.google.com", "image": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=700&q=85" }
+  },
+  "ourStory": [
+    { "year": "2022", "title": "Awal Bertemu", "description": "Tulis ceritanya di sini.", "image": "https://images.unsplash.com/photo-1525772764200-be829a350797?w=700&q=85&fit=crop" },
+    { "year": "2024", "title": "Lamaran", "description": "Tulis ceritanya di sini.", "image": "https://images.unsplash.com/photo-1529636798458-92182e662485?w=700&q=85&fit=crop" }
+  ],
+  "bank": [
+    { "name": "BCA", "number": "0000 0000 00", "atasNama": "Nama" }
+  ],
+  "socialMedia": {
+    "groom": { "instagram": "https://instagram.com/" },
+    "bride": { "instagram": "https://instagram.com/" },
+    "whatsapp": "62800000000"
+  },
+  "comments": []
+}

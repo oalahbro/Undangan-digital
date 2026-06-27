@@ -12,6 +12,7 @@ const logoutBtn   = $('#logoutBtn');
 const toastEl     = $('#toast');
 
 let weddingData = null;
+let tenantSlug = null;   // slug client aktif (untuk generator link tamu)
 
 /* ---------- HTTP helper ---------- */
 async function api(path, options = {}) {
@@ -75,6 +76,7 @@ async function checkAuth() {
   try {
     const me = await api('/api/admin/me');
     if (me.authenticated) {
+      tenantSlug = me.tenant || null;
       showDashboard(me.username);
       await loadData();
     } else {
@@ -97,6 +99,7 @@ loginForm.addEventListener('submit', async (e) => {
       method: 'POST',
       body: { username: fd.get('username'), password: fd.get('password') }
     });
+    tenantSlug = res.tenant || null;
     showDashboard(res.username);
     loginForm.reset();
     await loadData();
@@ -513,7 +516,13 @@ function formatTime(ts) {
 
   const buildUrl = (name) => {
     const base = (baseInput.value.trim().replace(/\/+$/, '')) || location.origin;
-    return base + '/?to=' + encodeURIComponent(name);
+    const enc = encodeURIComponent(name);
+    let host = '';
+    try { host = new URL(base).hostname; } catch {}
+    // Kalau base belum di subdomain client (mis. 1-host/Funnel), selipkan /t/<slug>.
+    const onSubdomain = tenantSlug && host.split('.')[0] === tenantSlug;
+    if (tenantSlug && !onSubdomain) return `${base}/t/${tenantSlug}?to=${enc}`;
+    return `${base}/?to=${enc}`;
   };
 
   function generate() {

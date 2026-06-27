@@ -33,3 +33,7 @@ Thumbs.db
 
 # Data backups (opsional - hapus kalau backup ingin di-push)
 data/backup/
+
+# Multi-tenant: data & password client
+data/tenants.json
+data/tenants/
