@@ -47,7 +47,7 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>Slug</th><th>Nama</th><th>Domain</th><th>Dibuat</th><th>Aksi</th>
+              <th>Slug</th><th>Nama</th><th>Template</th><th>Domain</th><th>Dibuat</th><th>Aksi</th>
             </tr>
           </thead>
           <tbody id="tbody">
@@ -75,6 +75,10 @@
         <input id="addSlug" class="form-control form-control-sm mb-2" placeholder="mis. eka-salsa">
         <label class="form-label small fw-semibold mb-1">Nama Client</label>
         <input id="addName" class="form-control form-control-sm mb-2" placeholder="mis. Eka &amp; Salsa">
+        <label class="form-label small fw-semibold mb-1">Template</label>
+        <select id="addTemplate" class="form-select form-select-sm mb-2">
+          <option value="green-pii">green-pii</option>
+        </select>
         <label class="form-label small fw-semibold mb-1">
           Password <span class="text-muted fw-normal">(kosong = generate otomatis)</span>
         </label>
@@ -183,6 +187,16 @@
     M[id] = new bootstrap.Modal(document.getElementById(id));
   });
 
+  async function loadTemplates() {
+    try {
+      const r = await j('/api/templates');
+      if (!r.ok) return;
+      const list = await r.json();
+      const sel = document.getElementById('addTemplate');
+      sel.innerHTML = list.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    } catch {}
+  }
+
   async function load() {
     err('dashErr', '');
     const r = await j('/api/tenants');
@@ -198,6 +212,7 @@
       <tr>
         <td><code class="small">${esc(t.slug)}</code></td>
         <td class="small">${esc(t.name)}</td>
+        <td><span class="badge bg-info text-dark small">${esc(t.template||'green-pii')}</span></td>
         <td class="small">${(t.domains || []).map(d => `<span class="badge bg-secondary badge-dom">${esc(d)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
         <td class="small text-muted">${t.createdAt ? new Date(t.createdAt).toLocaleDateString('id-ID') : '—'}</td>
         <td class="text-nowrap">
@@ -227,6 +242,7 @@
     if (!r.ok) { err('loginErr', (await r.json()).error || 'Password salah'); return; }
     document.getElementById('loginWrap').hidden = true;
     document.getElementById('dashboard').hidden = false;
+    loadTemplates();
     load();
   });
 
@@ -240,8 +256,9 @@
   document.getElementById('btnAddSave').addEventListener('click', async () => {
     err('addErr', '');
     const body = {
-      slug: document.getElementById('addSlug').value.trim(),
-      name: document.getElementById('addName').value.trim()
+      slug:     document.getElementById('addSlug').value.trim(),
+      name:     document.getElementById('addName').value.trim(),
+      template: document.getElementById('addTemplate').value
     };
     const pw = document.getElementById('addPasswd').value.trim();
     if (pw) body.password = pw;
@@ -250,6 +267,7 @@
     if (!r.ok) { err('addErr', d.error || 'Gagal'); return; }
     M.mAdd.hide();
     ['addSlug', 'addName', 'addPasswd'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('addTemplate').selectedIndex = 0;
     showResult('Client Dibuat', [['Slug', d.slug], ['Nama', d.name], ['Password', d.password]]);
     load();
   });
@@ -314,6 +332,7 @@
     if (r.ok && (await r.json()).ok) {
       document.getElementById('loginWrap').hidden = true;
       document.getElementById('dashboard').hidden = false;
+      loadTemplates();
       load();
     }
   }).catch(() => {});

@@ -29,7 +29,7 @@ const BACKUP_DIR  = path.join(ROOT, 'data', 'tenants', 'backup');
 const TENANTS_PATH = path.join(ROOT, 'data', 'tenants.json');     // registry
 const TEMPLATE_PATH = path.join(ROOT, 'data', 'template.json');
 const ADMIN_DIR   = path.join(ROOT, 'admin');
-const INDEX_PATH  = path.join(ROOT, 'index.html');
+const TMPL_DIR    = path.join(ROOT, 'templates');                // templates/<name>/index.html
 const UPLOAD_ROOT = path.join(ROOT, 'assets', 'uploads');        // assets/uploads/<slug>/
 
 const UPLOAD_MAX = 8 * 1024 * 1024;            // 8 MB (gambar)
@@ -444,15 +444,18 @@ function landingHtml() {
 async function serveIndex(req, res) {
   if (!req.tenant) return res.status(404).type('html').send(landingHtml());
   try {
+    const reg   = await getRegistry();
+    const tmpl  = (reg[req.tenant] && reg[req.tenant].template) || 'green-pii';
+    const idxPath = path.join(TMPL_DIR, tmpl, 'index.html');
     const [html, data] = await Promise.all([
-      fs.readFile(INDEX_PATH, 'utf8'),
+      fs.readFile(idxPath, 'utf8'),
       readTenantData(req.tenant).catch(() => ({}))
     ]);
     const origin  = `${req.protocol}://${req.get('host')}`;
     res.type('html').send(injectOG(html, data, origin, origin + req.originalUrl));
   } catch (e) {
     console.error('serveIndex error:', e);
-    res.sendFile(INDEX_PATH);
+    res.status(500).type('html').send('<h1>Template tidak ditemukan</h1>');
   }
 }
 
@@ -494,14 +497,21 @@ if (SA_PATH) {
 
   saRouter.get('/api/me', (req, res) => res.json({ ok: !!saGetSession(req) }));
 
+  saRouter.get('/api/templates', async (req, res) => {
+    try {
+      const entries = await fs.readdir(TMPL_DIR, { withFileTypes: true });
+      res.json(entries.filter(e => e.isDirectory()).map(e => e.name).sort());
+    } catch { res.json(['green-pii']); }
+  });
+
   saRouter.get('/api/tenants', requireSA, (req, res) => {
     try { res.json(store.listTenants()); }
     catch (e) { res.status(500).json({ error: e.message }); }
   });
 
   saRouter.post('/api/tenants', requireSA, (req, res) => {
-    const { slug, name, password } = req.body || {};
-    try { res.status(201).json(store.createTenant(slug, name, password)); }
+    const { slug, name, password, template } = req.body || {};
+    try { res.status(201).json(store.createTenant(slug, name, password, template)); }
     catch (e) { res.status(400).json({ error: e.message }); }
   });
 
