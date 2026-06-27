@@ -13,6 +13,47 @@ Copy seluruh folder `undangan/` ke `C:\xampp\htdocs\`, lalu buka:
 http://localhost/undangan/
 ```
 
+> Cara 1 & 2 hanya untuk **melihat** undangan (konten default). Untuk **panel admin** dan **RSVP** yang berfungsi, jalankan lewat server di bawah.
+
+**Cara 3 — Dengan server (admin & RSVP aktif):**
+Butuh Node.js. Dari folder project:
+```bash
+npm install
+npm start
+```
+Lalu buka `http://localhost:3000`. Server ini sekaligus menyajikan panel admin & API RSVP.
+
+## Panel Admin
+
+Akses: **`http://localhost:3000/admin`**
+
+**Login:**
+- Username & password diatur lewat file `.env` (contoh ada di `.env.example`):
+  ```
+  ADMIN_USER=admin
+  ADMIN_PASS=ganti-password-ini
+  PORT=3000
+  ```
+- Kalau `.env` belum dibuat, server memakai default **`admin` / `admin123`** — wajib diganti sebelum online.
+- Setelah mengubah `.env`, **restart server** agar password baru terbaca.
+
+**Yang bisa dikelola dari admin** (semua tersimpan ke `data/wedding.json`, auto-backup di `data/backup/`):
+
+| Tab | Isi |
+|-----|-----|
+| **Media** | Upload/ganti: gambar cover, gambar + teks quote, gambar gift, **video**, dan **lagu/backsound** |
+| **Mempelai** | Nama, orang tua, foto, Instagram |
+| **Alamat** | Venue & alamat pengiriman kado |
+| **Event** | Tanggal, jam, lokasi & **gambar** Akad/Resepsi + map link |
+| **Our Story** | Timeline (tahun, judul, deskripsi, gambar) |
+| **Bank** | Rekening (bank, atas nama, nomor) |
+| **Social Media** | Instagram & WhatsApp |
+| **Comments** | Lihat & hapus ucapan/RSVP dari tamu |
+
+Setiap field gambar/video/lagu punya tombol **"⤴ Upload"** (file disimpan ke `assets/uploads/`) + preview. Klik thumbnail untuk popup besar.
+
+> `.env` tidak ikut ke Git (ada di `.gitignore`), jadi password admin tidak bocor ke repo.
+
 ## Personalisasi Nama Tamu
 
 Tambahkan query parameter `?to=` dan `?address=` di URL:
@@ -23,7 +64,9 @@ Nama dan alamat tamu akan otomatis muncul di cover.
 
 ## Kustomisasi
 
-Edit langsung file-nya — semua data placeholder ada di `index.html`:
+**Cara termudah:** ubah lewat **[Panel Admin](#panel-admin)** (`/admin`) — perubahan langsung tampil di undangan tanpa edit kode.
+
+Atau edit nilai default-nya langsung di file (dipakai sebagai fallback bila server mati):
 
 | Apa | Di mana |
 |-----|---------|
