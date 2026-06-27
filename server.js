@@ -9,6 +9,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
+app.set('trust proxy', true);   // hormati X-Forwarded-Proto dari reverse proxy (Caddy/nginx) untuk URL https
 const PORT = process.env.PORT || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
@@ -17,6 +18,7 @@ const ROOT       = __dirname;
 const DATA_PATH  = path.join(ROOT, 'data', 'wedding.json');
 const BACKUP_DIR = path.join(ROOT, 'data', 'backup');
 const ADMIN_DIR  = path.join(ROOT, 'admin');
+const INDEX_PATH = path.join(ROOT, 'index.html');
 const UPLOAD_DIR = path.join(ROOT, 'assets', 'uploads');
 const UPLOAD_MAX = 8 * 1024 * 1024;            // 8 MB (gambar)
 const VIDEO_MAX  = 60 * 1024 * 1024;           // 60 MB (video)
@@ -354,6 +356,56 @@ app.delete('/api/admin/comments/:id', requireAuth, async (req, res) => {
   }
 });
 
+/* ============== SSR: inject Open Graph per data ============== */
+function escAttr(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+function absUrl(origin, p) {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  return origin + (p.startsWith('/') ? p : '/' + p);
+}
+function setMeta(html, attr, key, value) {
+  const re = new RegExp(`(<meta ${attr}="${key}" content=")[^"]*(")`);
+  return html.replace(re, `$1${escAttr(value)}$2`);
+}
+// Crawler WhatsApp/FB tidak menjalankan JS → tag OG harus sudah benar saat HTML di-serve.
+function injectOG(html, data, origin, fullUrl) {
+  const m = (data && data.mempelai) || {};
+  const groom = (m.groom && m.groom.nickname) || 'Mempelai Pria';
+  const bride = (m.bride && m.bride.nickname) || 'Mempelai Wanita';
+  const dateLabel = (data && data.event && data.event.dateLabel) || '';
+  const title = `The Wedding of ${groom} & ${bride}`;
+  const desc  = `Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir di pernikahan ${groom} & ${bride}${dateLabel ? ' — ' + dateLabel : ''}.`;
+  const cover = (data && data.cover && data.cover.image) || (m.bride && m.bride.photo) || '';
+  const img   = absUrl(origin, cover);
+
+  let out = html.replace(/<title>[^<]*<\/title>/, `<title>${escAttr(title)}</title>`);
+  out = setMeta(out, 'property', 'og:site_name', title);
+  out = setMeta(out, 'property', 'og:title', title);
+  out = setMeta(out, 'property', 'og:description', desc);
+  out = setMeta(out, 'property', 'og:url', fullUrl);
+  out = setMeta(out, 'property', 'og:image', img);
+  out = setMeta(out, 'name', 'twitter:title', title);
+  out = setMeta(out, 'name', 'twitter:description', desc);
+  out = setMeta(out, 'name', 'twitter:image', img);
+  return out;
+}
+async function serveIndex(req, res) {
+  try {
+    const [html, data] = await Promise.all([
+      fs.readFile(INDEX_PATH, 'utf8'),
+      readData().catch(() => ({}))
+    ]);
+    const origin  = `${req.protocol}://${req.get('host')}`;
+    const fullUrl = origin + req.originalUrl;
+    res.type('html').send(injectOG(html, data, origin, fullUrl));
+  } catch (e) {
+    console.error('serveIndex error:', e);
+    res.sendFile(INDEX_PATH);
+  }
+}
+
 /* ============== STATIC ============== */
 
 app.get('/admin', (req, res) => {
@@ -367,6 +419,9 @@ app.get(['/index.html', '/index.htm'], (req, res) => {
   const i = req.originalUrl.indexOf('?');
   res.redirect(302, i >= 0 ? '/' + req.originalUrl.slice(i) : '/');
 });
+
+// Root: serve index.html dengan OG di-inject dari wedding.json (per client).
+app.get('/', serveIndex);
 
 app.use(express.static(ROOT, { index: 'index.html' }));
 
