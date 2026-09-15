@@ -410,8 +410,33 @@ window.addToCalendar = function addToCalendar() {
     const syncBtn = () => {
       unmuteBtn.classList.toggle('is-muted', video.muted);
       unmuteBtn.setAttribute('aria-pressed', String(!video.muted));
-      unmuteBtn.setAttribute('aria-label', video.muted ? 'Bunyikan suara' : 'Bisukan suara');
+      unmuteBtn.setAttribute('aria-label', video.muted ? 'Bunyikan suara dan layar penuh' : 'Bisukan suara');
     };
+    let wasFullscreen = false;
+    const leaveFullscreen = () => {
+      if (!wasFullscreen) return;
+      wasFullscreen = false;
+      video.pause();
+      video.muted = true;
+      if (typeof window.__musicResume === 'function') window.__musicResume();
+      syncBtn();
+    };
+    const enterFullscreen = () => {
+      try {
+        if (typeof video.requestFullscreen === 'function') {
+          const p = video.requestFullscreen();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } else if (typeof video.webkitEnterFullscreen === 'function') {
+          video.webkitEnterFullscreen();
+        }
+      } catch {}
+    };
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement === video) wasFullscreen = true;
+      else leaveFullscreen();
+    });
+    video.addEventListener('webkitbeginfullscreen', () => { wasFullscreen = true; });
+    video.addEventListener('webkitendfullscreen', leaveFullscreen);
     unmuteBtn.addEventListener('click', (e) => {
       e.preventDefault();
       video.muted = !video.muted;
@@ -419,6 +444,7 @@ window.addToCalendar = function addToCalendar() {
         const p = video.play();
         if (p && typeof p.catch === 'function') p.catch(() => {});
         if (typeof window.__musicPause === 'function') window.__musicPause();   // unmute video → pause lagu
+        enterFullscreen();
       } else {
         if (typeof window.__musicResume === 'function') window.__musicResume(); // mute video → lanjut lagu
       }
