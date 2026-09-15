@@ -55,13 +55,40 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
     });
   }
 
-  function bindEventCard(sel, ev, dateLabel) {
-    const card = document.querySelector(sel);
-    if (!card || !ev) return;
-    setSrc(card.querySelector('.event-card__hero'), ev.image);
-    setText(card.querySelector('.event-card__date'), dateLabel);
-    setText(card.querySelector('.event-card__time'), ev.label);
-    setAttr(card.querySelector('.btn-mini'), 'href', ev.mapUrl);
+  function eventItems(event) {
+    if (Array.isArray(event?.items)) return event.items;
+    return ['akad', 'resepsi'].filter(key => event?.[key]).map(key => {
+      const item = event[key];
+      return {
+        name: key === 'akad' ? 'Akad' : 'Resepsi',
+        time: item.label || item.time || '',
+        date: event.date || event.dateLabel || '',
+        address: item.location || '',
+        mapUrl: item.mapUrl || '',
+        image: item.image || ''
+      };
+    });
+  }
+
+  function formatEventDate(date) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return date || '';
+    const value = new Date(date + 'T00:00:00+07:00');
+    return new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(value);
+  }
+
+  function eventCardHTML(item) {
+    const href = /^https?:\/\//i.test(item.mapUrl || '') ? item.mapUrl : '#';
+    return `
+      <article class="event-card">
+        <img class="event-card__hero" src="${esc(item.image || '')}" alt="${esc(item.name || 'Event')}" />
+        <div class="event-card__body">
+          <h3 class="event-card__title">${esc(item.name || '')}</h3>
+          <p class="event-card__date">${esc(formatEventDate(item.date))}</p>
+          <p class="event-card__time">${esc(item.time || '')}</p>
+          <p class="event-card__address">${esc(item.address || '')}</p>
+          ${href === '#' ? '' : `<a class="btn-mini" href="${esc(href)}" target="_blank" rel="noopener">View Location</a>`}
+        </div>
+      </article>`;
   }
 
   function bindBank(banks) {
@@ -111,21 +138,20 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
 
     const ev = d.event;
     if (ev) {
-      bindEventCard('[data-event="akad"]', ev.akad, ev.dateLabel);
-      bindEventCard('[data-event="resepsi"]', ev.resepsi, ev.dateLabel);
-      setText(document.querySelector('[data-w="cover-date"]'), ev.dateLabel);
-      const lsLabel = ev.resepsi && ev.resepsi.label ? `${ev.dateLabel} · ${ev.resepsi.label}` : ev.dateLabel;
-      setText(document.querySelector('[data-w="ls-date"]'), lsLabel);
-      if (ev.date) {
-        const t = new Date(ev.date + 'T00:00:00+07:00').getTime();
+      const items = eventItems(ev);
+      const first = items[0] || {};
+      const cards = document.querySelector('[data-w="event-cards"]');
+      if (cards) cards.innerHTML = items.map(eventCardHTML).join('');
+      const dateLabel = formatEventDate(first.date);
+      setText(document.querySelector('[data-w="cover-date"]'), dateLabel);
+      setText(document.querySelector('[data-w="ls-date"]'), first.time ? `${dateLabel} · ${first.time}` : dateLabel);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(first.date || '')) {
+        const t = new Date(first.date + 'T00:00:00+07:00').getTime();
         if (!isNaN(t)) window.__setWeddingDate(t);
       }
     }
 
-    if (d.alamat) {
-      setText(document.querySelector('[data-w="venue"]'), d.alamat.venue);
-      setText(document.querySelector('[data-w="delivery"]'), d.alamat.deliveryAddress);
-    }
+    if (d.alamat) setText(document.querySelector('[data-w="delivery"]'), d.alamat.deliveryAddress);
 
     if (Array.isArray(d.bank)) bindBank(d.bank);
 

@@ -11,8 +11,8 @@
   --bg-dark:      #1A1A1A;
 
   --ink:          #1A1A1A;
-  --ink-muted:    #5F5F5F;
-  --ink-faint:    #8C8C8C;
+  --ink-muted:    #4A4A4A;
+  --ink-faint:    #707070;
   --line:         #DADADA;
   --line-soft:    #E5E5E5;
 
@@ -655,7 +655,8 @@ em { font-style: italic; }
 .couple__lead {
   font-family: var(--ff-serif);
   font-style: italic;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 17px;
   color: var(--ink-muted);
   line-height: 1.7;
   max-width: 360px;
@@ -827,7 +828,8 @@ em { font-style: italic; }
 .person__parents {
   font-family: var(--ff-serif);
   font-style: italic;
-  font-size: 12.5px;
+  font-weight: 700;
+  font-size: 15px;
   line-height: 1.7;
   color: #3d3d3d;
   margin-bottom: .9rem;
@@ -947,16 +949,10 @@ em { font-style: italic; }
   100% { transform: scaleX(-1) rotate(3deg)  translateY(0) scale(1); }
 }
 
-/* Ensure grid + venue text sit above the decorations */
-.events__grid,
-.events__venue {
+/* Keep event cards above the decorations */
+.events__grid {
   position: relative;
   z-index: 2;
-}
-
-.events__venue {
-  color: rgba(242, 237, 220, .92);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .35);
 }
 
 /* Event cards — each reveals individually (background stays static) */
@@ -1014,19 +1010,19 @@ em { font-style: italic; }
   line-height: 1.6;
   letter-spacing: .08em;
 }
-.event-card__date { font-weight: 600; color: var(--ink); font-size: 16px; }
-.event-card__time { margin-bottom: .65rem; }
-.event-card .btn-mini { margin-top: auto; align-self: center; font-size: 9px; padding: .42rem .8rem; }
-
-.events__venue {
+.event-card__date { font-weight: 800; color: var(--ink); font-size: 18px; }
+.event-card__time { font-weight: 800; font-size: 17px; margin-bottom: .2rem; }
+.event-card__address {
   font-family: var(--ff-serif);
   font-style: italic;
-  font-size: 13.5px;
-  color: rgba(242, 237, 220, .92);
-  line-height: 1.75;
-  letter-spacing: .01em;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink-muted);
+  line-height: 1.55;
+  white-space: pre-line;
+  margin-bottom: .65rem;
 }
+.event-card .btn-mini { margin-top: auto; align-self: center; font-size: 9px; padding: .42rem .8rem; }
 
 /* =========================================================
    COUNTDOWN
@@ -1165,7 +1161,8 @@ em { font-style: italic; }
 .livestream__date {
   font-family: var(--ff-serif);
   font-style: italic;
-  font-size: 13px;
+  font-weight: 700;
+  font-size: 19px;
   color: var(--ink-muted);
   letter-spacing: .02em;
 }
@@ -1774,8 +1771,8 @@ em { font-style: italic; }
   --rot: 0deg;
   --radius: 285px;
   position: relative;
-  width: 300px;
-  height: 420px;
+  width: 310px;
+  height: 430px;
   transform-style: preserve-3d;
   transform: translateZ(-380px) rotateY(var(--rot));
   will-change: transform;
@@ -1867,8 +1864,8 @@ em { font-style: italic; }
 }
 .story .card-cap__title {
   font-family: var(--ff-display);
-  font-weight: 600;
-  font-size: clamp(1rem, 3vw, 1.25rem);
+  font-weight: 800;
+  font-size: clamp(1.15rem, 3.5vw, 1.4rem);
   line-height: 1.2;
   color: #fff;
   margin: 0 0 .3rem 0;
@@ -1878,7 +1875,8 @@ em { font-style: italic; }
 .story .card-cap__body {
   font-family: var(--ff-serif);
   font-style: italic;
-  font-size: 12px;
+  font-weight: 700;
+  font-size: 13px;
   line-height: 1.5;
   color: rgba(255, 255, 255, .92);
   margin: 0;

@@ -130,6 +130,7 @@ async function loadData() {
   try {
     weddingData = await api('/api/admin/data');
     bindAll();
+    renderEvents();
     renderStory();
     renderBank();
     renderComments();
@@ -208,7 +209,7 @@ const UPLOAD_KINDS = {
 
 // Pasang tombol "Upload" pada setiap input gambar/video/audio.
 function enhanceUploaders(root = document) {
-  const sel = 'input[data-bind$=".photo"], input[data-bind$=".image"], input[data-story-field="image"], input[data-upload="video"], input[data-upload="audio"]';
+  const sel = 'input[data-bind$=".photo"], input[data-bind$=".image"], input[data-story-field="image"], input[data-event-field="image"], input[data-upload="video"], input[data-upload="audio"]';
   $$(sel, root).forEach(input => {
     if (input.dataset.uploader) return;
     input.dataset.uploader = '1';
@@ -249,6 +250,80 @@ function enhanceUploaders(root = document) {
     });
   });
 }
+
+/* ---------- Events (dynamic list) ---------- */
+const eventList = $('#eventList');
+
+function eventItems() {
+  if (Array.isArray(weddingData.event?.items)) return weddingData.event.items;
+  const event = weddingData.event || {};
+  return ['akad', 'resepsi'].filter(key => event[key]).map(key => {
+    const item = event[key];
+    return {
+      name: key === 'akad' ? 'Akad' : 'Resepsi',
+      time: item.label || item.time || '',
+      date: event.dateLabel || event.date || '',
+      address: item.location || '',
+      mapUrl: item.mapUrl || '',
+      image: item.image || ''
+    };
+  });
+}
+
+function renderEvents() {
+  const items = eventItems();
+  eventList.innerHTML = items.map((item, i) => eventRowHTML(item, i)).join('') ||
+    '<p class="empty">Belum ada event. Klik "+ Tambah Event" untuk menambah.</p>';
+  enhanceUploaders(eventList);
+}
+
+function eventRowHTML(item = {}, i) {
+  return `
+    <div class="row-card" data-event-row="${i}">
+      <div class="row-card__head">
+        <span class="row-card__index">Event #${i + 1}</span>
+        <button class="btn btn--danger" data-event-remove="${i}" type="button">Hapus</button>
+      </div>
+      <div class="row-card__grid">
+        <label class="field"><span>Nama event</span><input data-event-field="name" data-event-i="${i}" value="${escapeAttr(item.name || '')}" /></label>
+        <label class="field"><span>Waktu</span><input data-event-field="time" data-event-i="${i}" value="${escapeAttr(item.time || '')}" /></label>
+        <label class="field"><span>Tanggal</span><input type="date" data-event-field="date" data-event-i="${i}" value="${escapeAttr(item.date || '')}" /></label>
+        <label class="field"><span>Alamat</span><textarea rows="3" data-event-field="address" data-event-i="${i}">${escapeHtml(item.address || '')}</textarea></label>
+        <label class="field full"><span>Map URL</span><input data-event-field="mapUrl" data-event-i="${i}" value="${escapeAttr(item.mapUrl || '')}" /></label>
+        <label class="field full"><span>Gambar (URL)</span><input data-event-field="image" data-event-i="${i}" value="${escapeAttr(item.image || '')}" /></label>
+        <div class="field full"><img class="preview" data-event-thumb="${i}" ${item.image ? `src="${escapeAttr(item.image)}"` : ''} alt="" /></div>
+      </div>
+    </div>`;
+}
+
+function collectEvents() {
+  return $$('[data-event-row]').map(row => {
+    const i = row.dataset.eventRow;
+    const value = field => $(`[data-event-field="${field}"][data-event-i="${i}"]`, row)?.value || '';
+    return { name: value('name'), time: value('time'), date: value('date'), address: value('address'), mapUrl: value('mapUrl'), image: value('image') };
+  });
+}
+
+eventList.addEventListener('click', (e) => {
+  const removeBtn = e.target.closest('[data-event-remove]');
+  if (!removeBtn) return;
+  weddingData.event = { items: collectEvents() };
+  weddingData.event.items.splice(+removeBtn.dataset.eventRemove, 1);
+  renderEvents();
+});
+
+eventList.addEventListener('input', (e) => {
+  const input = e.target.closest('[data-event-field="image"]');
+  if (!input) return;
+  const thumb = $(`[data-event-thumb="${input.dataset.eventI}"]`, eventList);
+  if (thumb) { if (input.value) thumb.src = input.value; else thumb.removeAttribute('src'); }
+});
+
+$('[data-action="event-add"]').addEventListener('click', () => {
+  weddingData.event = { items: collectEvents() };
+  weddingData.event.items.push({ name: '', time: '', date: '', address: '', mapUrl: '', image: '' });
+  renderEvents();
+});
 
 /* ---------- Our Story (dynamic list) ---------- */
 const storyList = $('#storyList');
@@ -429,6 +504,7 @@ async function saveSection(payload, label) {
     const res = await api('/api/admin/data', { method: 'PUT', body: payload });
     weddingData = res.data;
     bindAll();
+    renderEvents();
     renderStory();
     renderBank();
     toast(label + ' tersimpan');
@@ -454,7 +530,7 @@ document.addEventListener('click', (e) => {
     return saveSection({ alamat: collectBinds('alamat') }, 'Alamat');
   }
   if (which === 'event') {
-    return saveSection({ event: collectBinds('event') }, 'Event');
+    return saveSection({ event: { items: collectEvents() } }, 'Event');
   }
   if (which === 'social') {
     return saveSection({ socialMedia: collectBinds('socialMedia') }, 'Social Media');

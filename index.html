@@ -144,6 +144,27 @@
       <img class="couple__border couple__border--bottom" src="assets/decor/FRAME6-GREEN-PII-e1761186695740.png" alt="" aria-hidden="true" loading="lazy" />
     </section>
 
+    <!-- ========== EVENTS ========== -->
+    <section class="events sect">
+      <img class="events__deco events__deco--l-top"    src="assets/decor/BUNGA-A2-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
+      <img class="events__deco events__deco--l-bottom" src="assets/decor/BUNGA-A3-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
+      <img class="events__deco events__deco--r-top"    src="assets/decor/BUNGA-A2-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
+      <img class="events__deco events__deco--r-bottom" src="assets/decor/BUNGA-A3-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
+
+      <div class="events__grid" data-w="event-cards">
+        <article class="event-card">
+          <img class="event-card__hero" src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=700&q=85" alt="Venue Akad" />
+          <div class="event-card__body">
+            <h3 class="event-card__title">Akad</h3>
+            <p class="event-card__date">Selasa, 30 Desember 2025</p>
+            <p class="event-card__time">07.00 WIB</p>
+            <p class="event-card__address">Ds. Pagu, Wates, Kediri</p>
+            <a class="btn-mini" href="https://maps.google.com" target="_blank" rel="noopener">View Location</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <!-- ========== OUR LOVE STORY (3D Cinematic Cylinder) ========== -->
     <section class="story sect" data-reveal>
       <div class="story__head">
@@ -206,51 +227,9 @@
 
     </section>
 
-    <!-- ========== EVENTS ========== -->
-    <section class="events sect">
-      <img class="events__deco events__deco--l-top"    src="assets/decor/BUNGA-A2-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
-      <img class="events__deco events__deco--l-bottom" src="assets/decor/BUNGA-A3-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
-      <img class="events__deco events__deco--r-top"    src="assets/decor/BUNGA-A2-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
-      <img class="events__deco events__deco--r-bottom" src="assets/decor/BUNGA-A3-GREEN-PII.webp" alt="" aria-hidden="true" loading="lazy" />
-
-      <div class="events__grid">
-        <article class="event-card" data-reveal data-event="akad">
-          <img class="event-card__hero" src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=700&q=85" alt="Venue Akad" />
-          <div class="event-card__body">
-            <h3 class="event-card__title">Akad</h3>
-            <p class="event-card__date">Selasa, 30 Desember 2025</p>
-            <p class="event-card__time">07.00 WIB</p>
-            <a class="btn-mini" href="https://maps.google.com" target="_blank" rel="noopener">View Location</a>
-          </div>
-        </article>
-
-        <article class="event-card" data-reveal data-event="resepsi">
-          <img class="event-card__hero" src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=700&q=85" alt="Venue Resepsi" />
-          <div class="event-card__body">
-            <h3 class="event-card__title">Resepsi</h3>
-            <p class="event-card__date">Selasa, 30 Desember 2025</p>
-            <p class="event-card__time">10.00 WIB</p>
-            <a class="btn-mini" href="https://maps.google.com" target="_blank" rel="noopener">View Location</a>
-          </div>
-        </article>
-      </div>
-      <p class="events__venue" data-reveal data-w="venue">Kediaman Mempelai Wanita<br />Ds. Pagu, Wates, Kediri — Jawa Timur</p>
-    </section>
-
-    <!-- ========== COUNTING DAYS + LIVE STREAM ========== -->
+    <!-- ========== VIDEO + COUNTING DAYS ========== -->
     <section class="countdown sect" data-reveal>
-      <h2 class="sect__title">Counting Days</h2>
-
-      <div class="countdown__grid">
-        <div class="cd-cell"><span class="cd-num" id="cdDays">00</span><span class="cd-lbl">Days</span></div>
-        <div class="cd-cell"><span class="cd-num" id="cdHours">00</span><span class="cd-lbl">Hours</span></div>
-        <div class="cd-cell"><span class="cd-num" id="cdMins">00</span><span class="cd-lbl">Mins</span></div>
-        <div class="cd-cell"><span class="cd-num" id="cdSecs">00</span><span class="cd-lbl">Secs</span></div>
-      </div>
-
-      <button class="btn-pill btn-pill--outline" type="button" onclick="addToCalendar()">Save The Date</button>
-
-      <h2 class="sect__title sect__title--secondary">Video</h2>
+      <h2 class="sect__title">Video</h2>
 
       <div class="livestream__video">
         <video id="liveStreamVideo" src="assets/jaxk.mp4" muted autoplay playsinline webkit-playsinline loop preload="auto" disablepictureinpicture controlslist="nodownload noplaybackrate nofullscreen"></video>
@@ -268,6 +247,17 @@
       </button>
 
       <p class="livestream__date" data-w="ls-date">Selasa, 30 Desember 2025 · 10.00 WIB</p>
+
+      <h2 class="sect__title sect__title--secondary">Counting Days</h2>
+
+      <div class="countdown__grid">
+        <div class="cd-cell"><span class="cd-num" id="cdDays">00</span><span class="cd-lbl">Days</span></div>
+        <div class="cd-cell"><span class="cd-num" id="cdHours">00</span><span class="cd-lbl">Hours</span></div>
+        <div class="cd-cell"><span class="cd-num" id="cdMins">00</span><span class="cd-lbl">Mins</span></div>
+        <div class="cd-cell"><span class="cd-num" id="cdSecs">00</span><span class="cd-lbl">Secs</span></div>
+      </div>
+
+      <button class="btn-pill btn-pill--outline" type="button" onclick="addToCalendar()">Save The Date</button>
     </section>
 
     <!-- ========== RSVP + WISHES ========== -->

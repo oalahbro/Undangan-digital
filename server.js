@@ -374,7 +374,9 @@ function injectOG(html, data, origin, fullUrl) {
   const m = (data && data.mempelai) || {};
   const groom = (m.groom && m.groom.nickname) || 'Mempelai Pria';
   const bride = (m.bride && m.bride.nickname) || 'Mempelai Wanita';
-  const dateLabel = (data && data.event && data.event.dateLabel) || '';
+  const event = data && data.event;
+  const firstEvent = event && Array.isArray(event.items) && event.items[0];
+  const dateLabel = (event && event.dateLabel) || (firstEvent && firstEvent.date) || '';
   const title = `The Wedding of ${groom} & ${bride}`;
   const desc  = `Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir di pernikahan ${groom} & ${bride}${dateLabel ? ' — ' + dateLabel : ''}.`;
   const cover = (data && data.cover && data.cover.image) || (m.bride && m.bride.photo) || '';

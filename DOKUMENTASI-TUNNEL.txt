@@ -1,0 +1,127 @@
+DOKUMENTASI UNdangan Digital + Cloudflare Tunnel
+================================================
+
+Status saat dokumentasi dibuat
+------------------------------
+- Aplikasi: Undangan Digital
+- Folder aplikasi: /home/eclipse/Undangan-digital
+- Service systemd: undangan-digital.service
+- Port aplikasi: 3000
+- Origin Cloudflare Tunnel: http://localhost:3000
+- Service Cloudflare Tunnel: cloudflared.service
+
+Arsitektur
+----------
+Internet
+  -> https://subdomain.domain-anda.com
+  -> Cloudflare Tunnel
+  -> http://localhost:3000
+  -> Undangan Digital (systemd service)
+
+Konfigurasi Cloudflare Tunnel
+-----------------------------
+Di Cloudflare Zero Trust Dashboard:
+
+1. Buka https://one.dash.cloudflare.com/
+2. Masuk ke Networks -> Tunnels.
+3. Pilih tunnel yang aktif.
+4. Buka Public Hostnames.
+5. Tambahkan hostname dengan nilai berikut:
+
+   Subdomain : undangan              (contoh)
+   Domain    : domain-anda.com       (pilih domain Anda)
+   Type      : HTTP
+   URL       : localhost:3000
+
+6. Simpan konfigurasi.
+
+Setelah itu, aplikasi dapat diakses melalui:
+https://undangan.domain-anda.com
+
+Ganti "undangan" dan "domain-anda.com" sesuai hostname yang dibuat.
+Cloudflare akan membuat record DNS tunnel secara otomatis.
+
+Perintah service aplikasi
+-------------------------
+Cek status:
+
+  sudo systemctl status undangan-digital --no-pager
+
+Mulai service:
+
+  sudo systemctl start undangan-digital
+
+Hentikan service:
+
+  sudo systemctl stop undangan-digital
+
+Restart setelah mengubah file aplikasi:
+
+  sudo systemctl restart undangan-digital
+
+Aktifkan startup otomatis setelah reboot:
+
+  sudo systemctl enable undangan-digital
+
+Nonaktifkan startup otomatis:
+
+  sudo systemctl disable undangan-digital
+
+Lihat log aplikasi secara langsung:
+
+  sudo journalctl -u undangan-digital -f
+
+Lihat 100 log terakhir:
+
+  sudo journalctl -u undangan-digital -n 100 --no-pager
+
+Perintah Cloudflare Tunnel
+--------------------------
+Cek status tunnel:
+
+  sudo systemctl status cloudflared --no-pager
+
+Restart tunnel:
+
+  sudo systemctl restart cloudflared
+
+Lihat log tunnel secara langsung:
+
+  sudo journalctl -u cloudflared -f
+
+Pengujian lokal
+---------------
+Cek apakah aplikasi merespons dari server:
+
+  curl -I http://127.0.0.1:3000/
+  curl -I http://127.0.0.1:3000/admin
+
+Hasil yang normal adalah HTTP 200.
+
+Cek port 3000:
+
+  sudo ss -ltnp '( sport = :3000 )'
+
+Troubleshooting
+---------------
+1. Domain menampilkan 502 Bad Gateway
+   - Pastikan undangan-digital.service berstatus active.
+   - Pastikan Cloudflare Public Hostname mengarah ke localhost:3000.
+   - Jalankan curl lokal untuk memastikan aplikasi memberi respons HTTP 200.
+
+2. Domain tidak dapat dibuka
+   - Pastikan cloudflared.service berstatus active.
+   - Buka Cloudflare Zero Trust -> Networks -> Tunnels dan pastikan tunnel Healthy.
+   - Pastikan hostname dan domain yang dipilih sudah benar.
+
+3. Aplikasi berhenti setelah perubahan
+   - Jalankan:
+
+     sudo systemctl restart undangan-digital
+
+Keamanan
+--------
+- Jangan kirim atau menyimpan token Cloudflare Tunnel pada chat atau repository.
+- Admin aplikasi saat ini masih menggunakan kredensial default dari source code.
+- Sebelum membagikan domain secara publik, ganti ADMIN_USER dan ADMIN_PASS melalui file .env, lalu restart undangan-digital.
+- Pertimbangkan memakai Cloudflare Access untuk membatasi akses ke halaman /admin.

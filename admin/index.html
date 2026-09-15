@@ -138,8 +138,6 @@
           <button class="btn btn--primary" data-save="alamat">Simpan</button>
         </div>
         <fieldset class="card">
-          <label class="field"><span>Venue</span><input data-bind="alamat.venue" /></label>
-          <label class="field"><span>Map URL</span><input data-bind="alamat.mapUrl" /></label>
           <label class="field"><span>Alamat Pengiriman Hadiah</span><textarea rows="3" data-bind="alamat.deliveryAddress"></textarea></label>
         </fieldset>
       </div>
@@ -148,33 +146,12 @@
       <div class="panel" data-panel="event">
         <div class="panel__head">
           <h2>Event</h2>
-          <button class="btn btn--primary" data-save="event">Simpan</button>
+          <div class="panel__actions">
+            <button class="btn btn--ghost" data-action="event-add" type="button">+ Tambah Event</button>
+            <button class="btn btn--primary" data-save="event">Simpan</button>
+          </div>
         </div>
-        <fieldset class="card">
-          <legend>Umum</legend>
-          <label class="field"><span>Tanggal (YYYY-MM-DD)</span><input data-bind="event.date" /></label>
-          <label class="field"><span>Label Tanggal</span><input data-bind="event.dateLabel" /></label>
-        </fieldset>
-        <div class="grid-2">
-          <fieldset class="card">
-            <legend>Akad</legend>
-            <label class="field"><span>Jam (HH:mm)</span><input data-bind="event.akad.time" /></label>
-            <label class="field"><span>Label Jam</span><input data-bind="event.akad.label" /></label>
-            <label class="field"><span>Lokasi</span><input data-bind="event.akad.location" /></label>
-            <label class="field"><span>Map URL</span><input data-bind="event.akad.mapUrl" /></label>
-            <label class="field"><span>Gambar (URL)</span><input data-bind="event.akad.image" /></label>
-            <img class="preview" data-preview="event.akad.image" alt="" />
-          </fieldset>
-          <fieldset class="card">
-            <legend>Resepsi</legend>
-            <label class="field"><span>Jam (HH:mm)</span><input data-bind="event.resepsi.time" /></label>
-            <label class="field"><span>Label Jam</span><input data-bind="event.resepsi.label" /></label>
-            <label class="field"><span>Lokasi</span><input data-bind="event.resepsi.location" /></label>
-            <label class="field"><span>Map URL</span><input data-bind="event.resepsi.mapUrl" /></label>
-            <label class="field"><span>Gambar (URL)</span><input data-bind="event.resepsi.image" /></label>
-            <img class="preview" data-preview="event.resepsi.image" alt="" />
-          </fieldset>
-        </div>
+        <div id="eventList" class="list"></div>
       </div>
 
       <!-- Our Story -->

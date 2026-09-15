@@ -14,7 +14,7 @@
     "src": "/assets/jaxk.mp4"
   },
   "music": {
-    "src": "/assets/lagu-dummy.mp3"
+    "src": "/assets/uploads/fix-song-2c2d920a04d6.mp3"
   },
   "mempelai": {
     "groom": {
@@ -33,28 +33,35 @@
     }
   },
   "alamat": {
-    "venue": "Kediaman Mempelai Wanita, Ds. Pagu, Wates, Kediri — Jawa Timur",
-    "mapUrl": "https://maps.google.com",
     "deliveryAddress": "Ds. Pagu, Kec. Wates, Kab. Kediri, Jawa Timur — 64174"
   },
   "event": {
-    "date": "2025-12-30",
-    "dateLabel": "Selasa, 30 Desember 2025",
-    "timezone": "WIB",
-    "akad": {
-      "time": "07:00",
-      "label": "07.00 WIB",
-      "location": "Ds. Pagu, Wates, Kediri",
-      "mapUrl": "https://maps.google.com",
-      "image": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=700&q=85"
-    },
-    "resepsi": {
-      "time": "10:00",
-      "label": "10.00 WIB",
-      "location": "Ds. Pagu, Wates, Kediri",
-      "mapUrl": "https://maps.google.com",
-      "image": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=700&q=85"
-    }
+    "items": [
+      {
+        "name": "Akad",
+        "time": "08.00 WIB",
+        "date": "2026-10-01",
+        "address": "DS. Grabahan RW 7 RW 2 KEC. Karangrejo KAB. Magetan",
+        "mapUrl": "https://maps.app.goo.gl/AymUB5mgxgWn8tBV7",
+        "image": "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=700&q=85"
+      },
+      {
+        "name": "Resepsi",
+        "time": "10.00 WIB",
+        "date": "2026-10-01",
+        "address": "DS. Grabahan RW 7 RW 2 KEC. Karangrejo KAB. Magetan",
+        "mapUrl": "https://maps.app.goo.gl/AymUB5mgxgWn8tBV7",
+        "image": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=700&q=85"
+      },
+      {
+        "name": "Ngunduh Mantu",
+        "time": "10.00 WIB",
+        "date": "2026-10-03",
+        "address": "DS Golan RT 01 RW 01\nKEC. Sawahan KAB. Madiun",
+        "mapUrl": "https://maps.app.goo.gl/ADZVfAMQfhn5kzjw7",
+        "image": "/assets/uploads/3360e2e0-021b-45c4-b3f9-838fd5c66990-1c8e9302b4c0.jpg"
+      }
+    ]
   },
   "ourStory": [
     {
