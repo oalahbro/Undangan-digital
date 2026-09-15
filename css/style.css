@@ -1030,13 +1030,8 @@ em { font-style: italic; }
 .countdown {
   position: relative;
   overflow: hidden;
-  margin: 0 calc(var(--pad-x) * -1);
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
-
-  background:
-    linear-gradient(rgba(232, 232, 232, .2), rgba(232, 232, 232, .2)),
-    url('../assets/decor/BACKGROUND-GREEN-PII.webp') center/cover no-repeat;
 }
 
 .countdown__grid {
@@ -1703,6 +1698,14 @@ em { font-style: italic; }
    LOVE STORY — 3D Cinematic Curved Cylinder (GSAP)
    Full-bleed edge-to-edge, text overlay on image bottom
    ========================================================= */
+.story-countdown {
+  position: relative;
+  overflow: hidden;
+  margin: 0 calc(var(--pad-x) * -1);
+  background:
+    linear-gradient(rgba(232, 232, 232, .2), rgba(232, 232, 232, .2)),
+    url('../assets/decor/BACKGROUND-GREEN-PII.webp') center / cover no-repeat;
+}
 .story {
   position: relative;
   padding-top: .4rem;
@@ -1756,8 +1759,6 @@ em { font-style: italic; }
 
   -webkit-mask: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
           mask: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
-
-  background: linear-gradient(180deg, var(--bg-softer) 0%, var(--bg-page) 100%);
 
   cursor: grab;
   touch-action: pan-y;
@@ -1887,12 +1888,13 @@ em { font-style: italic; }
   overflow: hidden;
 }
 
-/* Vignette edges */
+/* Vignette gray at carousel edges */
 .story .scene::before,
 .story .scene::after {
   content: '';
   position: absolute;
-  top: 0; bottom: 0;
+  top: 0;
+  bottom: 0;
   width: 18%;
   pointer-events: none;
   z-index: 2;
@@ -1911,7 +1913,8 @@ em { font-style: italic; }
     -webkit-mask: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
             mask: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
   }
-  .story .scene::before, .story .scene::after { width: 10%; }
+  .story .scene::before,
+  .story .scene::after { width: 10%; }
   .story .card-cap { padding: 2rem 1rem 1rem; }
   .story .card-cap__body { font-size: 11px; }
 }
