@@ -809,7 +809,7 @@ document.addEventListener('click', async (e) => {
   else new IntersectionObserver((entries) => {
     inView = entries[0].isIntersecting;
     syncTick();
-  }, { threshold: 0.1 }).observe(scene);
+  }, { threshold: 0.95 }).observe(scene);
 
   document.addEventListener('visibilitychange', syncTick);
   reduceMotion.addEventListener('change', syncTick);
