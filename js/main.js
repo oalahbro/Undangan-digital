@@ -80,7 +80,7 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
     const href = /^https?:\/\//i.test(item.mapUrl || '') ? item.mapUrl : '#';
     return `
       <article class="event-card">
-        <img class="event-card__hero" src="${esc(item.image || '')}" alt="${esc(item.name || 'Event')}" />
+        <img class="event-card__hero" src="${esc(item.image || '')}" alt="${esc(item.name || 'Event')}" loading="lazy" decoding="async" />
         <div class="event-card__body">
           <h3 class="event-card__title">${esc(item.name || '')}</h3>
           <p class="event-card__date">${esc(formatEventDate(item.date))}</p>
@@ -124,7 +124,8 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
     if (d.gift) setSrc(document.querySelector('.gift__photo'), d.gift.image);
     if (d.video && d.video.src) {
       const v = document.getElementById('liveStreamVideo');
-      if (v && v.getAttribute('src') !== d.video.src) { v.src = d.video.src; v.load(); }
+      const nextSrc = new URL(d.video.src, location.href).href;
+      if (v && v.src !== nextSrc) { v.src = d.video.src; v.load(); }
     }
     if (d.music && d.music.src) {
       const a = document.getElementById('bgMusic');
@@ -168,42 +169,45 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
   const SHAPES = ['sage', 'forest', 'mint', 'moss', 'jade', 'sage', 'jade'];
   const R = (min, max) => min + Math.random() * (max - min);
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-  const PILE_MAX = 55;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce) and (pointer: coarse)');
+  const compact = matchMedia('(pointer: coarse)').matches;
+  const PILE_MAX = compact ? 24 : 55;
+  const BURST_THROUGH = compact ? 24 : 60;
+  const BURST_LAND = compact ? 6 : 15;
   const pile = [];
+  let started = false;
+  let hasBurst = false;
+  let throughTimer = 0;
+  let landTimer = 0;
 
   function spawn(type /* 'through' | 'land' */) {
+    if (!started || reducedMotion.matches || document.visibilityState === 'hidden') return;
+
     const p = document.createElement('span');
     p.className = 'petal petal--' + pick(SHAPES);
 
     const startX = R(-5, 100) + 'vw';
     const driftX = R(-28, 28) + 'vw';
-    const spin   = (Math.random() < .5 ? -1 : 1) * R(360, 1080) + 'deg';
-    const width  = R(12, 24);
-    const aspect = R(1.3, 1.6);               // leaf: taller than wide
-    const height = width * aspect;
+    const spin = (Math.random() < .5 ? -1 : 1) * R(360, 1080) + 'deg';
+    const width = R(12, 24);
     const duration = type === 'land' ? R(5.5, 8) : R(5, 8);
 
     p.style.setProperty('--startX', startX);
     p.style.setProperty('--driftX', driftX);
-    p.style.setProperty('--spin',   spin);
-    p.style.width  = width  + 'px';
-    p.style.height = height + 'px';
+    p.style.setProperty('--spin', spin);
+    p.style.width = width + 'px';
+    p.style.height = width * R(1.3, 1.6) + 'px';
     p.style.animationDuration = duration + 's';
 
     if (type === 'land') {
-      const landX = R(0, 100) + 'vw';
-      const landY = Math.floor(R(0, 28)) + 'px';
-      const landRot = R(-150, 150) + 'deg';
-      p.style.setProperty('--landX', landX);
-      p.style.setProperty('--landY', landY);
-      p.style.setProperty('--landRot', landRot);
+      p.style.setProperty('--landX', R(0, 100) + 'vw');
+      p.style.setProperty('--landY', Math.floor(R(0, 28)) + 'px');
+      p.style.setProperty('--landRot', R(-150, 150) + 'deg');
       p.style.animationName = 'petalLand';
-
+      p.addEventListener('animationend', () => { p.style.willChange = 'auto'; }, { once: true });
       field.appendChild(p);
       pile.push(p);
 
-      // Cap pile — fade oldest if too many
       if (pile.length > PILE_MAX) {
         const oldest = pile.shift();
         if (oldest) {
@@ -219,38 +223,52 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
     }
   }
 
-  // Initial heavy burst (fires when cover opens)
-  let hasBurst = false;
-  function burst() {
-    if (hasBurst) return;
-    hasBurst = true;
-
-    // 60 pass-through with staggered start
-    for (let i = 0; i < 60; i++) {
-      setTimeout(() => spawn('through'), R(0, 1800));
-    }
-    // Some landing petals to start building the ground pile
-    for (let i = 0; i < 15; i++) {
-      setTimeout(() => spawn('land'), R(200, 2800));
-    }
-  }
-
-  // Continuous trickle — keeps running forever
   function scheduleNext(type, minMs, maxMs) {
-    const delay = R(minMs, maxMs);
-    setTimeout(() => {
-      if (document.visibilityState !== 'hidden') spawn(type);
+    if (!started || reducedMotion.matches || document.visibilityState === 'hidden') return;
+    const timer = setTimeout(() => {
+      spawn(type);
       scheduleNext(type, minMs, maxMs);
-    }, delay);
+    }, R(minMs, maxMs));
+    if (type === 'land') landTimer = timer;
+    else throughTimer = timer;
   }
 
-  // Expose the burst trigger + start the trickle right away (but softly)
-  window.__petalBurst = burst;
+  function resume() {
+    if (!started || reducedMotion.matches || document.visibilityState === 'hidden') return;
+    scheduleNext('through', compact ? 2400 : 900, compact ? 4200 : 2200);
+    scheduleNext('land', compact ? 9000 : 4500, compact ? 15000 : 8500);
+  }
 
-  // Start gentle ambient trickle immediately (even before cover opens)
-  // — very soft, just a hint of movement behind the cover
-  scheduleNext('through', 900, 2200);   // 1 falling petal every ~1.5s average
-  scheduleNext('land',    4500, 8500);  // 1 landing petal every ~6.5s average
+  function start() {
+    if (started) return;
+    started = true;
+    resume();
+  }
+
+  function stop() {
+    clearTimeout(throughTimer);
+    clearTimeout(landTimer);
+    throughTimer = landTimer = 0;
+  }
+
+  function burst() {
+    start();
+    if (hasBurst || reducedMotion.matches) return;
+    hasBurst = true;
+    for (let i = 0; i < BURST_THROUGH; i++) setTimeout(() => spawn('through'), R(0, 1800));
+    for (let i = 0; i < BURST_LAND; i++) setTimeout(() => spawn('land'), R(200, 2800));
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    stop();
+    if (document.visibilityState === 'visible') resume();
+  });
+  reducedMotion.addEventListener('change', () => {
+    stop();
+    if (!reducedMotion.matches) resume();
+  });
+
+  window.__petalBurst = burst;
 })();
 
 /* ---------- Open cover ---------- */
@@ -393,20 +411,31 @@ window.addToCalendar = function addToCalendar() {
   }
 })();
 
-/* ---------- Video: autoplay (muted) when scrolled into view ---------- */
+/* ---------- Video: autoplay (muted) only while visible ---------- */
 (function livestreamAutoplay() {
   const video = document.getElementById('liveStreamVideo');
+  const main = document.getElementById('main');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce) and (pointer: coarse)');
   if (!video) return;
 
   const unmuteBtn = document.getElementById('liveStreamUnmute');
-
+  let inView = false;
   video.muted = true;
+
+  const isOpen = () => !main || main.getAttribute('aria-hidden') !== 'true';
+  const syncPlayback = () => {
+    if (inView && isOpen() && document.visibilityState === 'visible' && !reduceMotion.matches) {
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    } else if (document.fullscreenElement !== video && !video.webkitDisplayingFullscreen) {
+      video.pause();
+    }
+  };
 
   // Button tap → unmute + play (the click itself is the user gesture the
   // browser uses to grant audio permission). Button is the ONLY way to unmute,
   // so it stays visible until the user explicitly taps it.
   if (unmuteBtn) {
-    // Toggle suara; tombol TETAP ada (tidak hilang) sebagai kontrol mute/unmute.
     const syncBtn = () => {
       unmuteBtn.classList.toggle('is-muted', video.muted);
       unmuteBtn.setAttribute('aria-pressed', String(!video.muted));
@@ -441,36 +470,56 @@ window.addToCalendar = function addToCalendar() {
       e.preventDefault();
       video.muted = !video.muted;
       if (!video.muted) {
+        video.currentTime = 0;
         const p = video.play();
         if (p && typeof p.catch === 'function') p.catch(() => {});
-        if (typeof window.__musicPause === 'function') window.__musicPause();   // unmute video → pause lagu
+        if (typeof window.__musicPause === 'function') window.__musicPause();
         enterFullscreen();
-      } else {
-        if (typeof window.__musicResume === 'function') window.__musicResume(); // mute video → lanjut lagu
+      } else if (typeof window.__musicResume === 'function') {
+        window.__musicResume();
       }
       syncBtn();
     });
     syncBtn();
   }
 
-  // Autoplay (muted) when the video scrolls into view; pause when it leaves.
-  async function tryPlay() {
-    try { await video.play(); } catch {}
+  if (!('IntersectionObserver' in window)) inView = true;
+  else {
+    new IntersectionObserver((entries) => {
+      inView = entries[0].isIntersecting;
+      syncPlayback();
+    }, { threshold: 0.35 }).observe(video);
   }
 
-  if (!('IntersectionObserver' in window)) {
-    tryPlay();
-    return;
-  }
+  document.addEventListener('visibilitychange', syncPlayback);
+  reduceMotion.addEventListener('change', syncPlayback);
+  if (main) new MutationObserver(syncPlayback).observe(main, { attributes: true, attributeFilter: ['aria-hidden'] });
+  syncPlayback();
+})();
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) tryPlay();
-      else video.pause();
-    });
-  }, { threshold: 0.35 });
+/* ---------- Lottie birds: animate only while the couple section is visible ---------- */
+(function coupleBirds() {
+  const birds = document.querySelector('.couple__birds');
+  const section = document.querySelector('.couple');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce) and (pointer: coarse)');
+  if (!birds || !section) return;
 
-  io.observe(video);
+  let inView = false;
+  const sync = () => {
+    if (typeof birds.play !== 'function' || typeof birds.pause !== 'function') return;
+    if (inView && document.visibilityState === 'visible' && !reduceMotion.matches) birds.play();
+    else birds.pause();
+  };
+
+  if (!('IntersectionObserver' in window)) inView = true;
+  else new IntersectionObserver((entries) => {
+    inView = entries[0].isIntersecting;
+    sync();
+  }, { threshold: 0.15 }).observe(section);
+
+  document.addEventListener('visibilitychange', sync);
+  reduceMotion.addEventListener('change', sync);
+  customElements.whenDefined('lottie-player').then(sync);
 })();
 
 /* ---------- Lightbox (zoom images) ---------- */
@@ -602,167 +651,169 @@ document.addEventListener('click', async (e) => {
   });
 })();
 
-/* ---------- Love Story — 3D Cylinder (CSS transforms + rAF spin + drag) ---------- */
+/* ---------- Love Story — 3D Cylinder (viewport-gated rAF + pointer drag) ---------- */
 (function gallery3D() {
   const scene = document.getElementById('g3dScene');
   const stage = document.getElementById('g3dStage');
+  const main = document.getElementById('main');
   if (!scene || !stage) return;
 
-  const reduceMotion = false;   // animasi dipaksa selalu jalan (abaikan setting OS)
-
-  let rot = 0;                  // current rotation in degrees
-  let velocity = 0;             // deg/ms (for flick momentum)
-  const autoSpeed = -360 / 100000; // full turn every 100s (negative = counter-clockwise)
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce) and (pointer: coarse)');
+  const autoSpeed = -360 / 100000;
+  const DRAG_SENS = 0.4;
+  const DIR_THRESHOLD = 8;
+  const H_DOMINANCE = 1.2;
+  let rot = 0;
+  let velocity = 0;
   let isDragging = false;
   let hoverPaused = false;
+  let inView = false;
+  let frame = 0;
   let lastT = performance.now();
-
-  function apply() {
-    stage.style.setProperty('--rot', rot.toFixed(3) + 'deg');
-  }
-  apply();
-
-  function tick(t) {
-    const dt = t - lastT;
-    lastT = t;
-
-    if (!isDragging) {
-      if (Math.abs(velocity) > 0.0001) {
-        // Flick momentum decay
-        rot += velocity * dt;
-        velocity *= Math.pow(0.94, dt / 16.67);
-        if (Math.abs(velocity) < 0.002) velocity = 0;
-      } else if (!reduceMotion && !hoverPaused) {
-        rot += autoSpeed * dt;
-      }
-      apply();
-    }
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-
-  /* ---------- Drag to rotate ---------- */
+  let pointerId = null;
+  let pending = false;
+  let committed = false;
   let startX = 0;
   let startY = 0;
   let startRot = 0;
   let lastX = 0;
   let lastDragT = 0;
-  let touchPending = false;     // touch started, direction not yet locked
-  let touchCommitted = false;   // touch locked as horizontal drag
-  const DRAG_SENS = 0.4;        // deg per px (sedikit dikurangi)
-  const DIR_THRESHOLD = 8;      // px moved before deciding direction
-  const H_DOMINANCE = 1.2;      // |dx| must be > 1.2 × |dy| to count as horizontal
 
-  function getPoint(e) {
-    if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    return { x: e.clientX, y: e.clientY };
+  function apply() {
+    stage.style.setProperty('--rot', rot.toFixed(3) + 'deg');
   }
 
-  /* ---- Mouse drag (immediate — no direction check) ---- */
-  function onMouseDown(e) {
-    isDragging = true;
-    velocity = 0;
-    const p = getPoint(e);
-    startX = lastX = p.x;
-    startY = p.y;
-    lastDragT = performance.now();
-    startRot = rot;
-    scene.classList.add('is-dragging');
+  function isActive() {
+    return inView && document.visibilityState === 'visible' && (!main || main.getAttribute('aria-hidden') !== 'true');
   }
 
-  function onMouseMove(e) {
-    if (!isDragging) return;
-    const p = getPoint(e);
-    rot = startRot + (p.x - startX) * DRAG_SENS;
+  function shouldAnimate() {
+    return isActive() && !isDragging && (Math.abs(velocity) > 0.0001 || (!reduceMotion.matches && !hoverPaused));
+  }
+
+  function stopTick() {
+    if (!frame) return;
+    cancelAnimationFrame(frame);
+    frame = 0;
+  }
+
+  function startTick() {
+    if (frame || !shouldAnimate()) return;
+    lastT = performance.now();
+    frame = requestAnimationFrame(tick);
+  }
+
+  function tick(t) {
+    frame = 0;
+    if (!shouldAnimate()) return;
+    const dt = t - lastT;
+    lastT = t;
+
+    if (Math.abs(velocity) > 0.0001) {
+      rot += velocity * dt;
+      velocity *= Math.pow(0.94, dt / 16.67);
+      if (Math.abs(velocity) < 0.002) velocity = 0;
+    } else if (!reduceMotion.matches && !hoverPaused) {
+      rot += autoSpeed * dt;
+    }
     apply();
-    const now = performance.now();
-    const dt = now - lastDragT;
-    if (dt > 0) velocity = ((p.x - lastX) * DRAG_SENS) / dt;
-    lastX = p.x;
-    lastDragT = now;
+    startTick();
   }
 
-  function onMouseUp() {
-    if (!isDragging) return;
-    isDragging = false;
-    scene.classList.remove('is-dragging');
+  function syncTick() {
+    if (shouldAnimate()) startTick();
+    else stopTick();
   }
 
-  /* ---- Touch drag (direction-aware) ---- */
-  function onTouchStart(e) {
-    // DON'T preventDefault on touchstart — let browser decide scroll initially
-    touchPending = true;
-    touchCommitted = false;
-    isDragging = false;
-    const p = getPoint(e);
-    startX = lastX = p.x;
-    startY = p.y;
-    lastDragT = performance.now();
-  }
-
-  function onTouchMove(e) {
-    if (!touchPending && !touchCommitted) return;
-    const p = getPoint(e);
-    const dx = p.x - startX;
-    const dy = p.y - startY;
-
-    // Direction-lock phase: wait until user moves enough to decide
-    if (touchPending && !touchCommitted) {
-      if (Math.abs(dx) < DIR_THRESHOLD && Math.abs(dy) < DIR_THRESHOLD) return;
-
-      if (Math.abs(dx) > H_DOMINANCE * Math.abs(dy)) {
-        // Dominant horizontal → commit as drag
-        touchCommitted = true;
-        touchPending = false;
-        isDragging = true;
-        velocity = 0;
-        startRot = rot;
-        scene.classList.add('is-dragging');
-        // Recalibrate start so current finger pos becomes zero drag
-        startX = lastX = p.x;
-      } else {
-        // Dominant vertical → abandon, let browser scroll normally
-        touchPending = false;
-        return;
-      }
-    }
-
-    if (touchCommitted) {
-      rot = startRot + (p.x - startX) * DRAG_SENS;
-      apply();
-      const now = performance.now();
-      const dt = now - lastDragT;
-      if (dt > 0) velocity = ((p.x - lastX) * DRAG_SENS) / dt;
-      lastX = p.x;
-      lastDragT = now;
-      if (e.cancelable) e.preventDefault();
-    }
-  }
-
-  function onTouchEnd() {
-    if (touchCommitted) {
+  function resetPointer() {
+    pointerId = null;
+    pending = false;
+    committed = false;
+    if (isDragging) {
       isDragging = false;
       scene.classList.remove('is-dragging');
     }
-    touchPending = false;
-    touchCommitted = false;
+    startTick();
   }
 
-  // Mouse (desktop)
-  scene.addEventListener('mousedown', onMouseDown);
-  window.addEventListener('mousemove', onMouseMove);
-  window.addEventListener('mouseup', onMouseUp);
-  window.addEventListener('mouseleave', onMouseUp);
+  function updateDrag(e) {
+    rot = startRot + (e.clientX - startX) * DRAG_SENS;
+    apply();
+    const now = performance.now();
+    const dt = now - lastDragT;
+    if (dt > 0) velocity = ((e.clientX - lastX) * DRAG_SENS) / dt;
+    lastX = e.clientX;
+    lastDragT = now;
+  }
 
-  // Touch (mobile) — passive start so vertical scroll feels instant
-  scene.addEventListener('touchstart', onTouchStart, { passive: true });
-  window.addEventListener('touchmove', onTouchMove, { passive: false });
-  window.addEventListener('touchend', onTouchEnd);
-  window.addEventListener('touchcancel', onTouchEnd);
+  function commitDrag(e) {
+    pending = false;
+    committed = true;
+    isDragging = true;
+    velocity = 0;
+    scene.classList.add('is-dragging');
+    if (!scene.hasPointerCapture(e.pointerId)) scene.setPointerCapture(e.pointerId);
+    stopTick();
+  }
 
-  // Pause on hover (desktop non-touch)
+  function onPointerDown(e) {
+    if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    pointerId = e.pointerId;
+    startX = lastX = e.clientX;
+    startY = e.clientY;
+    startRot = rot;
+    lastDragT = performance.now();
+    pending = true;
+    committed = false;
+  }
+
+  function onPointerMove(e) {
+    if (e.pointerId !== pointerId) return;
+    if (committed) {
+      updateDrag(e);
+      return;
+    }
+    if (!pending) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) < DIR_THRESHOLD && Math.abs(dy) < DIR_THRESHOLD) return;
+    if (Math.abs(dx) > H_DOMINANCE * Math.abs(dy)) {
+      commitDrag(e);
+      updateDrag(e);
+    } else {
+      resetPointer();
+    }
+  }
+
+  function onPointerEnd(e) {
+    if (e.pointerId !== pointerId) return;
+    if (scene.hasPointerCapture(e.pointerId)) scene.releasePointerCapture(e.pointerId);
+    resetPointer();
+  }
+
+  if ('PointerEvent' in window) {
+    scene.addEventListener('pointerdown', onPointerDown);
+    scene.addEventListener('pointermove', onPointerMove);
+    scene.addEventListener('pointerup', onPointerEnd);
+    scene.addEventListener('pointercancel', onPointerEnd);
+    scene.addEventListener('lostpointercapture', resetPointer);
+  }
+
   if (!matchMedia('(hover: none)').matches) {
-    scene.addEventListener('mouseenter', () => { hoverPaused = true; });
-    scene.addEventListener('mouseleave', () => { hoverPaused = false; });
+    scene.addEventListener('pointerenter', () => { hoverPaused = true; syncTick(); });
+    scene.addEventListener('pointerleave', () => { hoverPaused = false; syncTick(); });
   }
+
+  if (!('IntersectionObserver' in window)) inView = true;
+  else new IntersectionObserver((entries) => {
+    inView = entries[0].isIntersecting;
+    syncTick();
+  }, { threshold: 0.1 }).observe(scene);
+
+  document.addEventListener('visibilitychange', syncTick);
+  reduceMotion.addEventListener('change', syncTick);
+  if (main) new MutationObserver(syncTick).observe(main, { attributes: true, attributeFilter: ['aria-hidden'] });
+  apply();
+  syncTick();
 })();

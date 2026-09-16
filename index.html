@@ -138,7 +138,7 @@
       <!-- Flying birds (Lottie) — loops as section enters viewport -->
       <lottie-player class="couple__birds"
         src="assets/decor/bird-hitam-4-2.json"
-        background="transparent" speed="1" loop autoplay
+        background="transparent" speed="1" loop
         aria-hidden="true"></lottie-player>
 
       <img class="couple__border couple__border--bottom" src="assets/decor/FRAME6-GREEN-PII-e1761186695740.png" alt="" aria-hidden="true" loading="lazy" />
@@ -153,7 +153,7 @@
 
       <div class="events__grid" data-w="event-cards">
         <article class="event-card">
-          <img class="event-card__hero" src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=700&q=85" alt="Venue Akad" />
+          <img class="event-card__hero" src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=700&q=85" alt="Venue Akad" loading="lazy" decoding="async" />
           <div class="event-card__body">
             <h3 class="event-card__title">Akad</h3>
             <p class="event-card__date">Selasa, 30 Desember 2025</p>
@@ -233,7 +233,7 @@
       <h2 class="sect__title">Video</h2>
 
       <div class="livestream__video">
-        <video id="liveStreamVideo" src="assets/jaxk.mp4" muted autoplay playsinline webkit-playsinline loop preload="auto" disablepictureinpicture controlslist="nodownload noplaybackrate"></video>
+        <video id="liveStreamVideo" src="/assets/jaxk.mp4" muted playsinline webkit-playsinline loop preload="metadata" disablepictureinpicture controlslist="nodownload noplaybackrate"></video>
       </div>
 
       <button class="livestream__unmute is-muted" id="liveStreamUnmute" type="button" aria-label="Bunyikan suara dan layar penuh" aria-pressed="false">

@@ -404,7 +404,7 @@ em { font-style: italic; }
   background:
     linear-gradient(180deg, rgba(15, 36, 24, .88) 0%, rgba(18, 42, 28, .92) 50%, rgba(12, 30, 20, .95) 100%),
     url('https://images.unsplash.com/photo-1511497584788-876760111969?w=1400&q=80') center/cover no-repeat;
-  background-attachment: scroll, fixed;
+  background-attachment: scroll;
   color: #f2eddc;
   isolation: isolate;
 }
@@ -1647,6 +1647,22 @@ em { font-style: italic; }
   100%{ transform: translate(var(--landX), calc(100vh - var(--landY)))         rotate(var(--landRot)) scale(1); opacity: .95; }
 }
 
+@media (pointer: coarse) {
+  .petal { filter: none; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quote { background-attachment: scroll, fixed; }
+}
+
+@media (prefers-reduced-motion: reduce) and (pointer: coarse) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
 
 /* =========================================================
    LIGHTBOX
