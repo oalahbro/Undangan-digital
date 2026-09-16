@@ -663,7 +663,7 @@ document.addEventListener('click', async (e) => {
   const DRAG_SENS = 0.4;
   const DIR_THRESHOLD = 8;
   const H_DOMINANCE = 1.2;
-  let rot = -50;
+  let rot = 10;
   let velocity = 0;
   let isDragging = false;
   let hoverPaused = false;
@@ -809,7 +809,7 @@ document.addEventListener('click', async (e) => {
   else new IntersectionObserver((entries) => {
     inView = entries[0].isIntersecting;
     syncTick();
-  }, { threshold: 0.95 }).observe(scene);
+  }, { threshold: 0.98 }).observe(stage);
 
   document.addEventListener('visibilitychange', syncTick);
   reduceMotion.addEventListener('change', syncTick);
