@@ -11,7 +11,7 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
 (function personalizeGuest() {
   const to = new URLSearchParams(location.search).get('to');
   if (to) {
-    const el = document.getElementById('guestName');
+    const el = document.getElementById('vintageGuestName');
     if (el) el.textContent = decodeURIComponent(to);
   }
 })();
@@ -115,7 +115,7 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
   function applyWeddingData(d) {
     if (!d) return;
 
-    if (d.cover) setSrc(document.querySelector('.cover__bg'), d.cover.image);
+    if (d.cover) setSrc(document.getElementById('vintageCoverImage'), d.cover.image);
     if (d.quote) {
       setSrc(document.querySelector('.quote__ayat'), d.quote.image);
       setText(document.querySelector('.quote__body'), d.quote.body);
@@ -132,8 +132,11 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
       if (a && a.getAttribute('src') !== d.music.src) { a.src = d.music.src; }
     }
 
-    bindPerson(d.mempelai && d.mempelai.groom, d.socialMedia && d.socialMedia.groom, '[data-person="groom"]');
-    bindPerson(d.mempelai && d.mempelai.bride, d.socialMedia && d.socialMedia.bride, '[data-person="bride"]');
+    const mempelai = d.mempelai || {};
+    bindPerson(mempelai.groom, d.socialMedia && d.socialMedia.groom, '[data-person="groom"]');
+    bindPerson(mempelai.bride, d.socialMedia && d.socialMedia.bride, '[data-person="bride"]');
+    document.querySelectorAll('[data-intro-name="groom"]').forEach((el) => setText(el, mempelai.groom && mempelai.groom.nickname));
+    document.querySelectorAll('[data-intro-name="bride"]').forEach((el) => setText(el, mempelai.bride && mempelai.bride.nickname));
 
     if (Array.isArray(d.ourStory)) bindStory(d.ourStory);
 
@@ -271,25 +274,72 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
   window.__petalBurst = burst;
 })();
 
-/* ---------- Open cover ---------- */
-(function openCover() {
-  const btn   = document.getElementById('btnOpen');
-  const cover = document.getElementById('cover');
-  const main  = document.getElementById('main');
-  if (!btn || !cover || !main) return;
+/* ---------- Vintage intro ---------- */
+(function vintageIntro() {
+  const intro = document.getElementById('vintageIntro');
+  const cover = document.getElementById('vintageCover');
+  const open = document.getElementById('vintageOpen');
+  const coverImage = document.getElementById('vintageCoverImage');
+  const stage = document.getElementById('vintageVideoStage');
+  const video = document.getElementById('vintageOpeningVideo');
+  const overlay = document.getElementById('vintageVideoOverlay');
+  const main = document.getElementById('main');
+  if (!intro || !cover || !open || !coverImage || !stage || !video || !overlay || !main) return;
 
-  btn.addEventListener('click', () => {
-    if (typeof window.__petalBurst === 'function') window.__petalBurst();
-    if (typeof window.__startMusic === 'function') window.__startMusic();
-    cover.classList.add('is-opening');
-    document.body.classList.remove('is-locked');
-    main.setAttribute('aria-hidden', 'false');
-    window.scrollTo({ top: 0, behavior: 'instant' });
+  const OVERLAY_TIME = 11;
+  let opening = false;
+  let overlayShown = false;
 
-    setTimeout(() => {
-      cover.remove();
-    }, 2800);
+  video.muted = true;
+  video.volume = 0;
+  video.loop = false;
+
+  coverImage.addEventListener('error', () => {
+    if (!coverImage.src.endsWith('FALLBACK-HIJAU-V2-MOTION-PII-1.jpg')) {
+      coverImage.src = 'assets/images/FALLBACK-HIJAU-V2-MOTION-PII-1.jpg';
+    }
   });
+
+  const resetOverlay = () => {
+    overlayShown = false;
+    overlay.hidden = true;
+    overlay.classList.remove('is-visible');
+  };
+
+  const showOverlay = () => {
+    if (overlayShown || video.currentTime < OVERLAY_TIME) return;
+    overlayShown = true;
+    overlay.hidden = false;
+    overlay.classList.remove('is-visible');
+    void overlay.offsetWidth;
+    overlay.classList.add('is-visible');
+  };
+
+  const playVideo = async () => {
+    resetOverlay();
+    video.muted = true;
+    video.volume = 0;
+    try {
+      await video.play();
+      showOverlay();
+    } catch {}
+  };
+
+  open.addEventListener('click', () => {
+    if (opening) return;
+    opening = true;
+    open.disabled = true;
+    if (typeof window.__startMusic === 'function') window.__startMusic();
+    if (typeof window.__petalBurst === 'function') window.__petalBurst();
+    intro.classList.add('is-opened');
+    main.setAttribute('aria-hidden', 'false');
+    document.body.classList.remove('is-locked');
+    stage.classList.add('is-visible');
+    stage.setAttribute('aria-hidden', 'false');
+    void playVideo();
+    cover.classList.add('is-opening');
+  }, { once: true });
+  video.addEventListener('timeupdate', showOverlay);
 })();
 
 /* ---------- Background music ---------- */

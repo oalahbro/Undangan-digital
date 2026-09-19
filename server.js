@@ -391,6 +391,7 @@ function injectOG(html, data, origin, fullUrl) {
   out = setMeta(out, 'name', 'twitter:title', title);
   out = setMeta(out, 'name', 'twitter:description', desc);
   out = setMeta(out, 'name', 'twitter:image', img);
+  out = out.replace(/(<img id="vintageCoverImage"[^>]*\bsrc=")[^"]*/, `$1${escAttr(cover)}`);
   return out;
 }
 async function serveIndex(req, res) {
@@ -401,6 +402,7 @@ async function serveIndex(req, res) {
     ]);
     const origin  = `${req.protocol}://${req.get('host')}`;
     const fullUrl = origin + req.originalUrl;
+    res.set('Cache-Control', 'no-store, must-revalidate');
     res.type('html').send(injectOG(html, data, origin, fullUrl));
   } catch (e) {
     console.error('serveIndex error:', e);

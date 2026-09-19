@@ -32,34 +32,47 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Italiana&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/vintage-intro.css" />
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" defer></script>
 </head>
 <body class="is-locked">
 
-  <!-- ========== COVER ========== -->
-  <section id="cover" class="cover">
-    <div class="cover__media">
-      <img class="cover__bg" src="https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&q=85" alt="" />
-      <div class="cover__scrim" aria-hidden="true"></div>
-    </div>
+  <!-- ========== VINTAGE INTRO ========== -->
+  <section id="vintageIntro" class="vintage-intro" aria-label="Pembuka undangan">
+    <section id="vintageVideoStage" class="vintage-intro__stage" aria-hidden="true">
+      <video id="vintageOpeningVideo" class="vintage-intro__video" muted playsinline preload="auto" disablepictureinpicture aria-label="Video pembuka undangan">
+        <source src="assets/media/VINTAGE-06-BARU.mp4" type="video/mp4" />
+        Browser Anda tidak mendukung video pembuka.
+      </video>
+      <section id="vintageVideoOverlay" class="vintage-intro__overlay" aria-hidden="true" hidden>
+        <p class="vintage-intro__eyebrow">The Wedding of</p>
+        <h1 class="vintage-intro__names"><span data-intro-name="groom">Eka</span> <span class="vintage-intro__amp">&amp;</span> <span data-intro-name="bride">Salsa</span></h1>
+        <time class="vintage-intro__date" datetime="2026-10-01">01. 10. 2026</time>
+        <button class="btn-pill btn-pill--outline vintage-intro__save" type="button" onclick="addToCalendar()">Save The Date</button>
+      </section>
+      <div class="vintage-intro__scroll-cue" aria-hidden="true"><span></span><span></span></div>
+    </section>
 
-    <div class="cover__inner">
-      <div class="cover__top">
-        <p class="cover__eyebrow">The wedding of</p>
-        <h1 class="cover__names"><em>Eka</em> <span class="amp">&amp;</span> <em>Salsa</em></h1>
-        <p class="cover__date" data-w="cover-date">Tuesday, 30 December 2025</p>
-      </div>
+    <section id="vintageCover" class="vintage-intro__cover" aria-label="Sampul undangan">
+      <img id="vintageCoverImage" class="vintage-intro__image" src="assets/images/25KN154_2-2.jpg" alt="" fetchpriority="high" />
+      <div class="vintage-intro__scrim" aria-hidden="true"></div>
 
-      <div class="cover__bottom">
-        <div class="cover__guest">
-          <p class="cover__guest-label">Dear,</p>
-          <p class="cover__guest-name" id="guestName">Mr. &amp; Mrs. Guest</p>
+      <div class="vintage-intro__content">
+        <div class="vintage-intro__heading">
+          <p>The Wedding of</p>
+          <h1><span data-intro-name="groom">Eka</span> <span class="vintage-intro__amp">&amp;</span> <span data-intro-name="bride">Salsa</span></h1>
+          <p>01 . 10 . 2026</p>
         </div>
-        <button class="btn-pill" id="btnOpen" type="button">
-          <span>Open Invitation</span>
-        </button>
+
+        <div class="vintage-intro__action">
+          <p>Kepada Yth.</p>
+          <p id="vintageGuestName" class="vintage-intro__guest">Bapak/Ibu/Saudara/i</p>
+          <button id="vintageOpen" class="vintage-intro__open" type="button">
+            <span>BUKA UNDANGAN</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   </section>
 
   <!-- ========== MAIN ========== -->
