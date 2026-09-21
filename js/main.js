@@ -7,14 +7,8 @@ let WEDDING_DATE = new Date('2025-12-30T07:00:00+07:00').getTime();
 // Allow admin data (event.date) to override the countdown target at runtime.
 window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WEDDING_DATE = ms; };
 
-/* ---------- Guest personalization (?to=) ---------- */
-(function personalizeGuest() {
-  const to = new URLSearchParams(location.search).get('to');
-  if (to) {
-    const el = document.getElementById('vintageGuestName');
-    if (el) el.textContent = decodeURIComponent(to);
-  }
-})();
+/* Nama tamu tidak lagi dibaca dari query string di sini — server sudah
+   mendekripsi token ?g= dan menuliskannya ke #vintageGuestName saat SSR. */
 
 /* ---------- Bind editable content from admin (server API) ----------
    Halaman tetap menampilkan konten default (hardcoded) sebagai fallback;
@@ -78,7 +72,7 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
   function eventCardHTML(item) {
     const href = /^https?:\/\//i.test(item.mapUrl || '') ? item.mapUrl : '#';
     return `
-      <article class="event-card">
+      <article class="event-card" data-reveal>
         <div class="event-card__body">
           <h3 class="event-card__title">${esc(item.name || '')}</h3>
           <p class="event-card__date">${esc(formatEventDate(item.date))}</p>
@@ -142,7 +136,11 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
       const items = eventItems(ev);
       const first = items[0] || {};
       const cards = document.querySelector('[data-w="event-cards"]');
-      if (cards) cards.innerHTML = items.map(eventCardHTML).join('');
+      if (cards) {
+        cards.innerHTML = items.map(eventCardHTML).join('');
+        // Kartu event di-render setelah observer siap → daftarkan ulang
+        if (typeof window.__revealRefresh === 'function') window.__revealRefresh();
+      }
       const dateLabel = formatEventDate(first.date);
       setText(document.querySelector('[data-w="cover-date"]'), dateLabel);
       setText(document.querySelector('[data-w="ls-date"]'), first.time ? `${dateLabel} · ${first.time}` : dateLabel);
@@ -420,12 +418,13 @@ window.addToCalendar = function addToCalendar() {
 
 /* ---------- Reveal on scroll ---------- */
 (function reveal() {
-  const main  = document.getElementById('main');
-  const items = document.querySelectorAll('[data-reveal]');
-  if (!items.length) return;
+  const main = document.getElementById('main');
 
   if (!('IntersectionObserver' in window)) {
-    items.forEach(el => el.classList.add('is-visible'));
+    window.__revealRefresh = () => {
+      document.querySelectorAll('[data-reveal]').forEach(el => el.classList.add('is-visible'));
+    };
+    window.__revealRefresh();
     return;
   }
 
@@ -439,9 +438,17 @@ window.addToCalendar = function addToCalendar() {
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
 
+  const observed = new WeakSet();
+
+  // Re-query tiap kali dipanggil — menangkap elemen yang di-render belakangan (mis. kartu event dari API).
   function start() {
-    items.forEach(el => io.observe(el));
+    document.querySelectorAll('[data-reveal]').forEach(el => {
+      if (observed.has(el)) return;
+      observed.add(el);
+      io.observe(el);
+    });
   }
+  window.__revealRefresh = start;
 
   // If main is still hidden behind cover, wait until the parallax cover-open is nearly done
   if (main && main.getAttribute('aria-hidden') === 'true') {

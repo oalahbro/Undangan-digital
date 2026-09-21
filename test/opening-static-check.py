@@ -26,6 +26,15 @@ assert "OVERLAY_TIME = 11" in script
 
 server = (root / "server.js").read_text(encoding="utf-8")
 assert 'id="vintageCoverImage"' in server and "out.replace" in server and "no-store, must-revalidate" in server
+
+# Link tamu: nama dienkripsi + di-inject server-side, bukan lagi dari ?to= di browser
+assert (root / "lib" / "guest-token.js").is_file()
+assert "lib/guest-token" in server and "decryptGuestToken" in server and "injectGuest" in server
+assert "/api/admin/guest-links" in server and "invalidLinkPage" in server
+assert "?to=" not in script and "personalizeGuest" not in script
+
+admin_js = (root / "admin" / "admin.js").read_text(encoding="utf-8")
+assert "/api/admin/guest-links" in admin_js and "?to=" not in admin_js
 assert "intro.classList.add('is-opened')" in script
 assert "main.setAttribute('aria-hidden', 'false')" in script
 assert "document.body.classList.remove('is-locked')" in script

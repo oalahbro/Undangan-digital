@@ -124,4 +124,10 @@ Keamanan
 - Jangan kirim atau menyimpan token Cloudflare Tunnel pada chat atau repository.
 - Admin aplikasi saat ini masih menggunakan kredensial default dari source code.
 - Sebelum membagikan domain secara publik, ganti ADMIN_USER dan ADMIN_PASS melalui file .env, lalu restart undangan-digital.
+- Set juga GUEST_LINK_SECRET di .env. Ini kunci enkripsi link tamu (?g=...).
+  Generate sekali dengan:
+    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  JANGAN diganti setelah link tamu disebar — semua link lama akan jadi tidak valid.
+  Bila var ini kosong, server memakai kunci turunan dari ADMIN_USER/ADMIN_PASS dan
+  link tamu ikut rusak begitu password admin diganti.
 - Pertimbangkan memakai Cloudflare Access untuk membatasi akses ke halaman /admin.

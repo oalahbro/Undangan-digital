@@ -570,6 +570,7 @@ function formatTime(ts) {
   const namesInput = $('#guestNames');
   const result     = $('#guestResult');
   const countEl    = $('#guestCount');
+  const warnEl     = $('#guestWarn');
   if (!baseInput || !namesInput || !result) return;
 
   // Auto: ambil domain yang sedang dibuka. User tetap bisa override manual.
@@ -577,33 +578,72 @@ function formatTime(ts) {
 
   let rows = [];   // [{ name, url }]
 
-  const buildUrl = (name) => {
-    const base = (baseInput.value.trim().replace(/\/+$/, '')) || location.origin;
-    return base + '/?to=' + encodeURIComponent(name);
-  };
-
-  function generate() {
+  async function generate() {
     if (!baseInput.value.trim()) baseInput.value = location.origin;
+
     const names = namesInput.value.split('\n').map(s => s.trim()).filter(Boolean);
     // buang duplikat, pertahankan urutan
     const seen = new Set();
-    rows = names.filter(n => (seen.has(n) ? false : seen.add(n))).map(n => ({ name: n, url: buildUrl(n) }));
-    render();
+    const unique = names.filter(n => (seen.has(n) ? false : seen.add(n)));
+    if (!unique.length) { rows = []; render(); return; }
+
+    const btn = $('#guestGenerate');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Membuat…';
+    try {
+      // Nama dienkripsi di server (AES-GCM) — kunci tidak pernah sampai ke browser.
+      const res = await api('/api/admin/guest-links', {
+        method: 'POST',
+        body: { names: unique, base: baseInput.value.trim() }
+      });
+      rows = Array.isArray(res.links) ? res.links : [];
+      if (warnEl) {
+        warnEl.hidden = !res.secretIsDefault;
+        warnEl.textContent = res.secretIsDefault
+          ? 'GUEST_LINK_SECRET belum di-set di .env. Link memakai kunci turunan dari password admin, '
+            + 'jadi semua link tamu akan rusak bila password admin diganti. Set GUEST_LINK_SECRET di server.'
+          : '';
+      }
+      render();
+    } catch (err) {
+      toast('Gagal generate link: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
   }
 
   function render() {
     countEl.textContent = rows.length
       ? `${rows.length} link dibuat`
       : 'Tidak ada nama. Tempel daftar lalu klik Generate.';
-    result.innerHTML = rows.map((r, i) => `
-      <div class="guest-row">
-        <div class="guest-row__info">
-          <span class="guest-row__name">${escapeHtml(r.name)}</span>
-          <span class="guest-row__url">${escapeHtml(r.url)}</span>
-        </div>
-        <button class="btn btn--ghost guest-row__copy" data-copy-url="${i}" type="button">Copy</button>
-      </div>
-    `).join('');
+
+    if (!rows.length) { result.innerHTML = ''; return; }
+
+    result.innerHTML = `
+      <table class="guest-table">
+        <thead>
+          <tr>
+            <th class="guest-table__no">#</th>
+            <th class="guest-table__name">Nama Tamu</th>
+            <th class="guest-table__url">Link</th>
+            <th class="guest-table__act">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((r, i) => `
+            <tr>
+              <td class="guest-table__no">${i + 1}</td>
+              <td class="guest-table__name">${escapeHtml(r.name)}</td>
+              <td class="guest-table__url" title="${escapeHtml(r.url)}"><span>${escapeHtml(r.url)}</span></td>
+              <td class="guest-table__act">
+                <button class="btn btn--ghost guest-table__copy" data-copy-url="${i}" type="button">Copy</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
   }
 
   async function copyText(text) {

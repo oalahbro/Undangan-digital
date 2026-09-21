@@ -33,18 +33,25 @@ Akses: **`http://localhost:3000/admin`**
   ADMIN_USER=admin
   ADMIN_PASS=ganti-password-ini
   PORT=3000
+  GUEST_LINK_SECRET=<string-acak-panjang>
   ```
 - Kalau `.env` belum dibuat, server memakai default **`admin` / `admin123`** — wajib diganti sebelum online.
-- Setelah mengubah `.env`, **restart server** agar password baru terbaca.
+- `GUEST_LINK_SECRET` adalah kunci enkripsi link tamu. Generate sekali:
+  ```
+  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  ```
+  Jangan diganti setelah link disebar — semua link tamu jadi tidak valid.
+- Setelah mengubah `.env`, **restart server** agar nilai baru terbaca.
 
 **Yang bisa dikelola dari admin** (semua tersimpan ke `data/wedding.json`, auto-backup di `data/backup/`):
 
 | Tab | Isi |
 |-----|-----|
-| **Media** | Upload/ganti: gambar cover, gambar + teks quote, gambar gift, **video**, dan **lagu/backsound** |
+| **Media** | Upload/ganti: gambar cover, teks quote, gambar gift, **video**, dan **lagu/backsound** |
 | **Mempelai** | Nama, orang tua, foto, Instagram |
 | **Alamat** | Venue & alamat pengiriman kado |
-| **Event** | Tanggal, jam, lokasi & **gambar** Akad/Resepsi + map link |
+| **Event** | Tanggal, jam, lokasi + map link Akad/Resepsi |
+| **Link Tamu** | Generate link undangan personal per nama (terenkripsi) |
 | **Our Story** | Timeline (tahun, judul, deskripsi, gambar) |
 | **Bank** | Rekening (bank, atas nama, nomor) |
 | **Social Media** | Instagram & WhatsApp |
@@ -54,13 +61,19 @@ Setiap field gambar/video/lagu punya tombol **"⤴ Upload"** (file disimpan ke `
 
 > `.env` tidak ikut ke Git (ada di `.gitignore`), jadi password admin tidak bocor ke repo.
 
-## Personalisasi Nama Tamu
+## Link Tamu (Nama Terenkripsi)
 
-Tambahkan query parameter `?to=` di URL. Pakai root `/` (tanpa `index.html`):
+Link tamu dibuat dari **Panel Admin → tab Link Tamu**. Tempel daftar nama (satu per baris) → **Generate** → **Copy** / **Download CSV**.
+
+Nama dienkripsi di server dengan AES-256-GCM, jadi URL hanya berisi token acak:
 ```
-http://localhost:3000/?to=Bapak%20Joris
+https://undangan.contoh.id/?g=eyJ2IjoxLCJkIjoiYkZ4...
 ```
-Nama tamu akan otomatis muncul di cover.
+
+- Nama tamu otomatis muncul di cover undangan (`Kepada Yth. ...`).
+- Satu link terikat pada satu nama. Token yang diubah/dipalsukan tidak bisa membuka undangan — muncul halaman "Link Undangan Tidak Valid".
+- Kunci enkripsi ada di `GUEST_LINK_SECRET` (`.env`) dan tidak pernah dikirim ke browser.
+- Format lama `?to=Nama` **sudah tidak dipakai** — link lama tidak lagi memunculkan nama tamu.
 
 > URL `/index.html?...` otomatis di-redirect ke `/?...` oleh server, jadi `index.html` tidak pernah muncul di link yang disebar.
 

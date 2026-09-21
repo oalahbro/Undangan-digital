@@ -7,12 +7,20 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
+const { encryptGuestName, decryptGuestToken } = require('./lib/guest-token');
 
 const app = express();
 app.set('trust proxy', true);   // hormati X-Forwarded-Proto dari reverse proxy (Caddy/nginx) untuk URL https
 const PORT = process.env.PORT || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+
+// Kunci enkripsi link tamu. Kalau var khususnya kosong, turunkan dari kredensial
+// admin supaya server tetap jalan — tapi link jadi ikut berubah bila password diganti.
+const GUEST_SECRET = process.env.GUEST_LINK_SECRET || (ADMIN_USER + '|' + ADMIN_PASS);
+const GUEST_SECRET_IS_DEFAULT = !process.env.GUEST_LINK_SECRET;
+const GUEST_NAME_MAX  = 100;
+const GUEST_BATCH_MAX = 300;
 
 const ROOT       = __dirname;
 const DATA_PATH  = path.join(ROOT, 'data', 'wedding.json');
@@ -337,6 +345,45 @@ app.put('/api/admin/data', requireAuth, async (req, res) => {
   }
 });
 
+/* ---------- guest links (nama tamu terenkripsi) ---------- */
+function guestBaseUrl(input, req) {
+  const fallback = `${req.protocol}://${req.get('host')}`;
+  if (typeof input !== 'string') return fallback;
+  const trimmed = input.trim().replace(/\/+$/, '');
+  return /^https?:\/\/[^\s/]+/i.test(trimmed) ? trimmed : fallback;
+}
+
+app.post('/api/admin/guest-links', requireAuth, (req, res) => {
+  const body  = req.body || {};
+  const names = Array.isArray(body.names) ? body.names : null;
+  if (!names) return res.status(400).json({ error: 'Field "names" harus berupa array' });
+  if (names.length > GUEST_BATCH_MAX) {
+    return res.status(400).json({ error: `Maksimal ${GUEST_BATCH_MAX} nama sekali generate` });
+  }
+
+  const clean = [];
+  const seen  = new Set();
+  for (const raw of names) {
+    if (typeof raw !== 'string') return res.status(400).json({ error: 'Setiap nama harus berupa teks' });
+    const name = raw.trim();
+    if (!name || seen.has(name)) continue;   // kosong & duplikat dibuang
+    if (name.length > GUEST_NAME_MAX) {
+      return res.status(400).json({ error: `Nama "${name.slice(0, 30)}…" melebihi ${GUEST_NAME_MAX} karakter` });
+    }
+    seen.add(name);
+    clean.push(name);
+  }
+  if (!clean.length) return res.status(400).json({ error: 'Daftar nama kosong' });
+
+  const base = guestBaseUrl(body.base, req);
+  const links = clean.map(name => ({
+    name,
+    url: `${base}/?g=${encryptGuestName(name, GUEST_SECRET)}`
+  }));
+
+  res.json({ links, secretIsDefault: GUEST_SECRET_IS_DEFAULT });
+});
+
 app.delete('/api/admin/comments/:id', requireAuth, async (req, res) => {
   const id = req.params.id;
   try {
@@ -394,7 +441,67 @@ function injectOG(html, data, origin, fullUrl) {
   out = out.replace(/(<img id="vintageCoverImage"[^>]*\bsrc=")[^"]*/, `$1${escAttr(cover)}`);
   return out;
 }
+
+/* ---------- SSR: inject nama tamu dari token terenkripsi ---------- */
+function injectGuest(html, name) {
+  if (!name) return html;
+  return html.replace(
+    /(<p id="vintageGuestName"[^>]*>)[\s\S]*?(<\/p>)/,
+    (m, open, close) => open + escAttr(name) + close
+  );
+}
+
+// Halaman mandiri (tanpa JS, tanpa font eksternal) untuk token yang tidak valid.
+function invalidLinkPage() {
+  return `<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Link Undangan Tidak Valid</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 2rem;
+    text-align: center; color: #f2eddc; background: #0f2418;
+    font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  }
+  .card {
+    max-width: 26rem; padding: 2.5rem 1.75rem;
+    border: 1px solid rgba(255, 248, 222, .28); border-radius: 16px;
+    background: linear-gradient(180deg, rgba(24, 53, 34, .95), rgba(15, 36, 24, .95));
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+  }
+  h1 { margin: 0 0 .75rem; font-size: 1.6rem; font-style: italic; font-weight: 600; }
+  .rule { width: 3rem; height: 1px; margin: 1.25rem auto; background: rgba(255, 248, 222, .45); }
+  p { margin: 0; font-size: 1.05rem; font-style: italic; line-height: 1.75; color: rgba(242, 237, 220, .88); }
+</style>
+</head>
+<body>
+  <main class="card">
+    <h1>Link Undangan Tidak Valid</h1>
+    <div class="rule" aria-hidden="true"></div>
+    <p>Link yang Anda buka tidak dikenali atau sudah diubah. Silakan minta ulang link undangan kepada kami.</p>
+  </main>
+</body>
+</html>`;
+}
+
 async function serveIndex(req, res) {
+  // Token ada tapi gagal didekripsi = dipalsukan/diubah → blokir.
+  const token = typeof req.query.g === 'string' ? req.query.g : '';
+  let guestName = null;
+  if (token) {
+    const result = decryptGuestToken(token, GUEST_SECRET);
+    if (!result.ok) {
+      res.set('Cache-Control', 'no-store, must-revalidate');
+      return res.status(403).type('html').send(invalidLinkPage());
+    }
+    guestName = result.name;
+  }
+
   try {
     const [html, data] = await Promise.all([
       fs.readFile(INDEX_PATH, 'utf8'),
@@ -403,7 +510,7 @@ async function serveIndex(req, res) {
     const origin  = `${req.protocol}://${req.get('host')}`;
     const fullUrl = origin + req.originalUrl;
     res.set('Cache-Control', 'no-store, must-revalidate');
-    res.type('html').send(injectOG(html, data, origin, fullUrl));
+    res.type('html').send(injectGuest(injectOG(html, data, origin, fullUrl), guestName));
   } catch (e) {
     console.error('serveIndex error:', e);
     res.sendFile(INDEX_PATH);
@@ -434,4 +541,11 @@ app.listen(PORT, () => {
   console.log(`Admin panel:    http://localhost:${PORT}/admin`);
   console.log(`Data file:      ${DATA_PATH}`);
   console.log(`Backup dir:     ${BACKUP_DIR}`);
+  if (GUEST_SECRET_IS_DEFAULT) {
+    console.warn('');
+    console.warn('PERINGATAN: GUEST_LINK_SECRET belum di-set di .env.');
+    console.warn('  Link tamu memakai kunci turunan dari ADMIN_USER/ADMIN_PASS,');
+    console.warn('  sehingga semua link tamu jadi tidak valid bila password admin diganti.');
+    console.warn('  Set GUEST_LINK_SECRET sebelum online — lihat .env.example.');
+  }
 });
