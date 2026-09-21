@@ -64,8 +64,7 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
         time: item.label || item.time || '',
         date: event.date || event.dateLabel || '',
         address: item.location || '',
-        mapUrl: item.mapUrl || '',
-        image: item.image || ''
+        mapUrl: item.mapUrl || ''
       };
     });
   }
@@ -80,7 +79,6 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
     const href = /^https?:\/\//i.test(item.mapUrl || '') ? item.mapUrl : '#';
     return `
       <article class="event-card">
-        <img class="event-card__hero" src="${esc(item.image || '')}" alt="${esc(item.name || 'Event')}" loading="lazy" decoding="async" />
         <div class="event-card__body">
           <h3 class="event-card__title">${esc(item.name || '')}</h3>
           <p class="event-card__date">${esc(formatEventDate(item.date))}</p>
@@ -117,7 +115,6 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
 
     if (d.cover) setSrc(document.getElementById('vintageCoverImage'), d.cover.image);
     if (d.quote) {
-      setSrc(document.querySelector('.quote__ayat'), d.quote.image);
       setText(document.querySelector('.quote__body'), d.quote.body);
       setText(document.querySelector('.quote__src'), d.quote.source);
     }
@@ -578,7 +575,7 @@ window.addToCalendar = function addToCalendar() {
   const lbImg = document.getElementById('lightboxImg');
   if (!lb) return;
 
-  document.querySelectorAll('.carousel__slide img, .person__photo img, .event-card__hero, .gift__photo').forEach((img) => {
+  document.querySelectorAll('.carousel__slide img, .person__photo img, .gift__photo').forEach((img) => {
     img.addEventListener('click', () => {
       lbImg.src = img.src.replace(/w=\d+/, 'w=1600');
       lbImg.alt = img.alt || '';

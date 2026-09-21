@@ -209,7 +209,7 @@ const UPLOAD_KINDS = {
 
 // Pasang tombol "Upload" pada setiap input gambar/video/audio.
 function enhanceUploaders(root = document) {
-  const sel = 'input[data-bind$=".photo"], input[data-bind$=".image"], input[data-story-field="image"], input[data-event-field="image"], input[data-upload="video"], input[data-upload="audio"]';
+  const sel = 'input[data-bind$=".photo"], input[data-bind$=".image"], input[data-story-field="image"], input[data-upload="video"], input[data-upload="audio"]';
   $$(sel, root).forEach(input => {
     if (input.dataset.uploader) return;
     input.dataset.uploader = '1';
@@ -264,8 +264,7 @@ function eventItems() {
       time: item.label || item.time || '',
       date: event.dateLabel || event.date || '',
       address: item.location || '',
-      mapUrl: item.mapUrl || '',
-      image: item.image || ''
+      mapUrl: item.mapUrl || ''
     };
   });
 }
@@ -290,8 +289,6 @@ function eventRowHTML(item = {}, i) {
         <label class="field"><span>Tanggal</span><input type="date" data-event-field="date" data-event-i="${i}" value="${escapeAttr(item.date || '')}" /></label>
         <label class="field"><span>Alamat</span><textarea rows="3" data-event-field="address" data-event-i="${i}">${escapeHtml(item.address || '')}</textarea></label>
         <label class="field full"><span>Map URL</span><input data-event-field="mapUrl" data-event-i="${i}" value="${escapeAttr(item.mapUrl || '')}" /></label>
-        <label class="field full"><span>Gambar (URL)</span><input data-event-field="image" data-event-i="${i}" value="${escapeAttr(item.image || '')}" /></label>
-        <div class="field full"><img class="preview" data-event-thumb="${i}" ${item.image ? `src="${escapeAttr(item.image)}"` : ''} alt="" /></div>
       </div>
     </div>`;
 }
@@ -300,7 +297,7 @@ function collectEvents() {
   return $$('[data-event-row]').map(row => {
     const i = row.dataset.eventRow;
     const value = field => $(`[data-event-field="${field}"][data-event-i="${i}"]`, row)?.value || '';
-    return { name: value('name'), time: value('time'), date: value('date'), address: value('address'), mapUrl: value('mapUrl'), image: value('image') };
+    return { name: value('name'), time: value('time'), date: value('date'), address: value('address'), mapUrl: value('mapUrl') };
   });
 }
 
@@ -312,16 +309,9 @@ eventList.addEventListener('click', (e) => {
   renderEvents();
 });
 
-eventList.addEventListener('input', (e) => {
-  const input = e.target.closest('[data-event-field="image"]');
-  if (!input) return;
-  const thumb = $(`[data-event-thumb="${input.dataset.eventI}"]`, eventList);
-  if (thumb) { if (input.value) thumb.src = input.value; else thumb.removeAttribute('src'); }
-});
-
 $('[data-action="event-add"]').addEventListener('click', () => {
   weddingData.event = { items: collectEvents() };
-  weddingData.event.items.push({ name: '', time: '', date: '', address: '', mapUrl: '', image: '' });
+  weddingData.event.items.push({ name: '', time: '', date: '', address: '', mapUrl: '' });
   renderEvents();
 });
 

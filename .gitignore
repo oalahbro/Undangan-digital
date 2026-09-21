@@ -33,3 +33,6 @@ Thumbs.db
 
 # Data backups (opsional - hapus kalau backup ingin di-push)
 data/backup/
+
+# Personal wedding settings (local only — do NOT push)
+data/wedding.json

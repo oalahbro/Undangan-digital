@@ -248,7 +248,7 @@
   margin-top: 1.45rem;
   padding: 14px 30px;
   border-radius: 20px;
-  background: linear-gradient(100deg, #d1af82, #af8856);
+  background: linear-gradient(180deg, #ecd1a4 0%, #d1af82 50%, #a07a48 100%);
   box-shadow: 0 7px 18px rgba(0, 0, 0, .25);
   color: #000;
   font-size: 15px;
@@ -257,7 +257,11 @@
   line-height: 1;
 }
 
-.vintage-intro__open:hover { filter: brightness(1.08); transform: translateY(-2px); }
+.vintage-intro__open:hover {
+  background: linear-gradient(180deg, #d8b88a 0%, #b89263 50%, #8a6738 100%);
+  color: #000;
+  transform: translateY(-2px);
+}
 .vintage-intro__open:active { transform: translateY(0); }
 .vintage-intro__open:disabled { cursor: wait; opacity: .65; }
 
