@@ -463,41 +463,53 @@ em { font-style: italic; }
   100% { transform: scaleX(-1) rotate(3deg)  translateY(0px); }
 }
 
-.quote__inner {
+/* =========================================================
+   VINTAGE CARD — panel krem berbingkai, dipakai di Doa & Event.
+   Didefinisikan sekali di sini supaya kedua kartu tidak pernah
+   beda gaya saat salah satu diubah.
+   ========================================================= */
+.quote__inner,
+.event-card {
   position: relative;
-  z-index: 2;
-  max-width: 460px;
-  margin: 0 auto;
-  padding: 1.6rem 1.4rem 1.4rem;
   isolation: isolate;
-  background:
-    linear-gradient(180deg, rgba(253, 247, 230, .96) 0%, rgba(248, 235, 205, .94) 100%),
-    radial-gradient(ellipse at top, rgba(255, 255, 255, .45), transparent 60%);
+  overflow: hidden;
+  text-align: center;
+  color: #2c2418;
+  background: linear-gradient(180deg, rgba(248, 240, 220, .94) 0%, rgba(232, 215, 178, .88) 100%);
   border: 1px solid rgba(120, 96, 56, .45);
   border-radius: 14px;
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, .38),
+    0 16px 38px rgba(0, 0, 0, .35),
     0 2px 6px rgba(0, 0, 0, .22),
-    inset 0 0 0 1px rgba(255, 248, 222, .55);
-  text-align: center;
-  text-shadow: none;
+    inset 0 0 0 1px rgba(255, 248, 222, .5);
 }
 
+/* Strip ornamen FRAME6 di tepi atas & bawah */
 .quote__inner::before,
-.quote__inner::after {
+.quote__inner::after,
+.event-card::before,
+.event-card::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
-  height: 14px;
+  height: 12px;
   background: url('../assets/decor/FRAME6-GREEN-PII-e1761186695740.png') center/cover no-repeat;
   pointer-events: none;
   z-index: 0;
 }
+.quote__inner::before,
+.event-card::before { top: 6px; }
+.quote__inner::after,
+.event-card::after  { bottom: 6px; transform: scaleY(-1); }
 
-.quote__inner::before { top: 4px; }
-.quote__inner::after  { bottom: 4px; transform: scaleY(-1); }
-
+/* --- Bagian khusus kartu Doa --- */
+.quote__inner {
+  z-index: 2;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 1.4rem 1rem 1.2rem;
+}
 .quote__inner > * { position: relative; z-index: 1; }
 
 .quote__body {
@@ -1013,37 +1025,13 @@ em { font-style: italic; }
   margin-left: auto;
   margin-right: auto;
 }
+/* Layout kartu event — gaya visual (latar, border, bayangan, strip FRAME6)
+   diwarisi dari blok VINTAGE CARD di bagian SECTION DOA. */
 .event-card {
-  position: relative;
-  isolation: isolate;
-  background:
-    linear-gradient(180deg, rgba(248, 240, 220, .94) 0%, rgba(232, 215, 178, .88) 100%);
-  border: 1px solid rgba(120, 96, 56, .45);
-  border-radius: 14px;
-  box-shadow:
-    0 16px 38px rgba(0, 0, 0, .35),
-    0 2px 6px rgba(0, 0, 0, .22),
-    inset 0 0 0 1px rgba(255, 248, 222, .5);
-  text-align: center;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   padding: 1.4rem 1rem 1.2rem;
-  color: #2c2418;
 }
-.event-card::before,
-.event-card::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 12px;
-  background: url('../assets/decor/FRAME6-GREEN-PII-e1761186695740.png') center/cover no-repeat;
-  pointer-events: none;
-  z-index: 0;
-}
-.event-card::before { top: 6px; }
-.event-card::after  { bottom: 6px; transform: scaleY(-1); }
 .event-card__body {
   position: relative;
   z-index: 1;
