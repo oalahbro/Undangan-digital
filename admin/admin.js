@@ -565,18 +565,56 @@ function formatTime(ts) {
 })();
 
 /* ---------- Generator link undangan tamu ---------- */
+// Template bawaan — dipakai ketika admin belum pernah menyimpan template sendiri
+// atau ketika textarea dikosongkan saat generate.
+const DEFAULT_CHAT_TEMPLATE = `Assalamu'alaikum Warahmatullahi Wabarakatuh.
+Yth.
+{nama} & Partner
+Di Tempat
+
+Tanpa mengurangi rasa hormat, perkenankan kami mengundang Bapak/Ibu/Saudara/i untuk menghadiri acara pernikahan kami.
+
+Eka & Salsa
+Kamis, 1 Oktober 2026
+
+Link undangan bisa diakses lengkap di:
+{url}
+
+Merupakan suatu kehormatan & kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan untuk hadir dan memberikan doa restu.
+
+Terima kasih banyak atas perhatiannya
+
+Wassalammualaikum Warahmatullahi Wabarakatuh
+
+Hormat Kami,
+Eka & Salsa`;
+
 (function guestLinks() {
-  const baseInput  = $('#guestBaseUrl');
-  const namesInput = $('#guestNames');
-  const result     = $('#guestResult');
-  const countEl    = $('#guestCount');
-  const warnEl     = $('#guestWarn');
+  const baseInput      = $('#guestBaseUrl');
+  const namesInput     = $('#guestNames');
+  const templateInput  = $('#guestTemplate');
+  const result         = $('#guestResult');
+  const countEl        = $('#guestCount');
+  const warnEl         = $('#guestWarn');
   if (!baseInput || !namesInput || !result) return;
 
   // Auto: ambil domain yang sedang dibuka. User tetap bisa override manual.
   baseInput.value = location.origin;
 
   let rows = [];   // [{ name, url }]
+  // Template live — di-reload setiap kali user mengetik, jadi perubahan
+  // langsung berlaku tanpa klik Generate ulang.
+  let chatTemplate = templateInput ? templateInput.value : '';
+  if (templateInput) {
+    templateInput.addEventListener('input', () => {
+      chatTemplate = templateInput.value;
+    });
+  }
+
+  function buildMessage(name, url) {
+    const tpl = (chatTemplate && chatTemplate.trim()) || DEFAULT_CHAT_TEMPLATE;
+    return tpl.replaceAll('{nama}', name).replaceAll('{url}', url);
+  }
 
   async function generate() {
     if (!baseInput.value.trim()) baseInput.value = location.origin;
@@ -638,7 +676,7 @@ function formatTime(ts) {
               <td class="guest-table__name">${escapeHtml(r.name)}</td>
               <td class="guest-table__url" title="${escapeHtml(r.url)}"><span>${escapeHtml(r.url)}</span></td>
               <td class="guest-table__act">
-                <button class="btn btn--ghost guest-table__copy" data-copy-url="${i}" type="button">Copy</button>
+                <button class="btn btn--ghost guest-table__copy" data-copy-msg="${i}" type="button">Copy</button>
               </td>
             </tr>
           `).join('')}
@@ -652,26 +690,64 @@ function formatTime(ts) {
   }
 
   result.addEventListener('click', async (e) => {
-    const btn = e.target.closest('[data-copy-url]');
+    const btn = e.target.closest('[data-copy-msg]');
     if (!btn) return;
-    const r = rows[+btn.dataset.copyUrl];
+    const r = rows[+btn.dataset.copyMsg];
     if (!r) return;
-    if (await copyText(r.url)) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
+    const msg = buildMessage(r.name, r.url);
+    if (await copyText(msg)) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
     else toast('Gagal menyalin', 'error');
   });
 
   $('#guestGenerate').addEventListener('click', generate);
 
+  $('#guestTemplateSave').addEventListener('click', async () => {
+    if (!templateInput) return;
+    const btn = $('#guestTemplateSave');
+    const orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try {
+      // Snapshot nilai dari DOM SEBELUM PUT — agar tidak terganggu re-bind
+      // yang dilakukan oleh saveSection() setelah server echo data.
+      const value = templateInput.value;
+      const res = await api('/api/admin/data', {
+        method: 'PUT',
+        body: { settings: { chatTemplate: value } }
+      });
+      // Update state lokal dengan nilai yang baru disimpan, JANGAN biarkan
+      // bindAll() (dipanggil dari saveSection di handler lain) menimpa textarea.
+      // Kita tangani bindAll secara manual di sini untuk field ini saja.
+      if (res && res.data) {
+        weddingData = res.data;
+        // Bind ulang semua field KECUALI templateInput (kita sudah simpan snapshot di atas).
+        $$('[data-bind]').forEach(el => {
+          if (el === templateInput) return;
+          const v = getPath(weddingData, el.dataset.bind);
+          el.value = v == null ? '' : v;
+        });
+        // Sinkronkan state lokal dengan payload yang baru disimpan.
+        chatTemplate = value;
+      }
+      toast('Template tersimpan');
+    } catch (err) {
+      toast('Gagal simpan template: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = orig;
+    }
+  });
+
   $('#guestCopyAll').addEventListener('click', async () => {
     if (!rows.length) return toast('Generate dulu', 'error');
-    const text = rows.map(r => `${r.name}\t${r.url}`).join('\n');
-    toast(await copyText(text) ? `${rows.length} link disalin` : 'Gagal menyalin', rows.length ? 'ok' : 'error');
+    const text = rows.map(r => buildMessage(r.name, r.url)).join('\n\n---\n\n');
+    toast(await copyText(text) ? `${rows.length} pesan disalin` : 'Gagal menyalin', rows.length ? 'ok' : 'error');
   });
 
   $('#guestDownloadCsv').addEventListener('click', () => {
     if (!rows.length) return toast('Generate dulu', 'error');
     const esc = (s) => `"${String(s).replace(/"/g, '""')}"`;
-    const csv = 'Nama,URL\n' + rows.map(r => `${esc(r.name)},${esc(r.url)}`).join('\n');
+    const csv = 'Nama,URL,Pesan\n' + rows.map(r =>
+      `${esc(r.name)},${esc(r.url)},${esc(buildMessage(r.name, r.url))}`
+    ).join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

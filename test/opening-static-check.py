@@ -35,6 +35,16 @@ assert "?to=" not in script and "personalizeGuest" not in script
 
 admin_js = (root / "admin" / "admin.js").read_text(encoding="utf-8")
 assert "/api/admin/guest-links" in admin_js and "?to=" not in admin_js
+
+# Template chat untuk generator link tamu
+admin_html = (root / "admin" / "index.html").read_text(encoding="utf-8")
+assert 'id="guestTemplate"' in admin_html and 'data-bind="settings.chatTemplate"' in admin_html
+assert "{nama}" in admin_html and "{url}" in admin_html
+assert "DEFAULT_CHAT_TEMPLATE" in admin_js and "buildMessage" in admin_js
+assert "guestTemplateSave" in admin_js and "settings: { chatTemplate:" in admin_js
+# Server harus menerima key settings & chatTemplate
+assert "settings" in server and "chatTemplate" in server
+assert "ALLOWED" in server and "'settings'" in server
 assert "intro.classList.add('is-opened')" in script
 assert "main.setAttribute('aria-hidden', 'false')" in script
 assert "document.body.classList.remove('is-locked')" in script

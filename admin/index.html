@@ -211,6 +211,14 @@
           </label>
           <small style="color:var(--ink-soft)">Terisi otomatis dari domain yang sedang dibuka. Saat sudah online & buka admin dari domain asli, kolom ini langsung benar — ubah hanya bila ingin domain lain.</small>
           <label class="field">
+            <span>Template Pesan Undangan</span>
+            <textarea id="guestTemplate" data-bind="settings.chatTemplate" rows="12" placeholder="Assalamu'alaikum Warahmatullahi Wabarakatuh.&#10;Yth.&#10;{nama} &amp; Partner&#10;Di Tempat&#10;&#10;Tanpa mengurangi rasa hormat, perkenankan kami mengundang Bapak/Ibu/Saudara/i untuk menghadiri acara pernikahan kami.&#10;&#10;Eka &amp; Salsa&#10;Kamis, 1 Oktober 2026&#10;&#10;Link undangan bisa diakses lengkap di:&#10;{url}&#10;&#10;Merupakan suatu kehormatan &amp; kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan untuk hadir dan memberikan doa restu.&#10;&#10;Terima kasih banyak atas perhatiannya&#10;&#10;Wassalammualaikum Warahmatullahi Wabarakatuh&#10;&#10;Hormat Kami,&#10;Eka &amp; Salsa"></textarea>
+          </label>
+          <p class="hint">Gunakan <code>{nama}</code> untuk nama tamu dan <code>{url}</code> untuk link undangan. Kosongkan untuk pakai template bawaan.</p>
+          <div class="panel__actions">
+            <button class="btn btn--ghost" id="guestTemplateSave" type="button">Simpan Template</button>
+          </div>
+          <label class="field">
             <span>Daftar Nama (satu nama per baris)</span>
             <textarea id="guestNames" rows="8" placeholder="Bapak Joris&#10;Ibu Sari &amp; Keluarga&#10;Bpk. Budi Santoso"></textarea>
           </label>
@@ -235,6 +243,6 @@
     <img id="admLightboxImg" src="" alt="Preview" />
   </div>
 
-  <script src="/admin/admin.js"></script>
+  <script src="/admin/admin.js?v=2"></script>
 </body>
 </html>

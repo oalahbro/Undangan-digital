@@ -321,6 +321,15 @@ function validateAdminPayload(payload) {
   if (payload.ourStory !== undefined && !Array.isArray(payload.ourStory)) return 'ourStory harus array';
   if (payload.bank !== undefined && !Array.isArray(payload.bank)) return 'bank harus array';
   if (payload.socialMedia !== undefined && !isObject(payload.socialMedia)) return 'socialMedia harus object';
+  if (payload.settings !== undefined) {
+    if (!isObject(payload.settings)) return 'settings harus object';
+    if (payload.settings.chatTemplate !== undefined && typeof payload.settings.chatTemplate !== 'string') {
+      return 'settings.chatTemplate harus berupa teks';
+    }
+    if (typeof payload.settings.chatTemplate === 'string' && payload.settings.chatTemplate.length > 2000) {
+      return 'settings.chatTemplate maksimal 2000 karakter';
+    }
+  }
   return null;
 }
 
@@ -331,7 +340,7 @@ app.put('/api/admin/data', requireAuth, async (req, res) => {
   try {
     const data = await withWriteLock(async () => {
       const current = await readData();
-      const ALLOWED = ['cover', 'quote', 'gift', 'video', 'music', 'mempelai', 'alamat', 'event', 'ourStory', 'bank', 'socialMedia'];
+      const ALLOWED = ['cover', 'quote', 'gift', 'video', 'music', 'mempelai', 'alamat', 'event', 'ourStory', 'bank', 'socialMedia', 'settings'];
       for (const key of ALLOWED) {
         if (req.body[key] !== undefined) current[key] = req.body[key];
       }

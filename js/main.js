@@ -169,9 +169,9 @@ window.__setWeddingDate = (ms) => { if (typeof ms === 'number' && !isNaN(ms)) WE
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce) and (pointer: coarse)');
   const compact = matchMedia('(pointer: coarse)').matches;
-  const PILE_MAX = compact ? 24 : 55;
-  const BURST_THROUGH = compact ? 24 : 60;
-  const BURST_LAND = compact ? 6 : 15;
+  const PILE_MAX = compact ? 8 : 40;
+  const BURST_THROUGH = compact ? 16 : 50;
+  const BURST_LAND = compact ? 4 : 12;
   const pile = [];
   let started = false;
   let hasBurst = false;

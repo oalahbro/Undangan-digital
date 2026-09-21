@@ -419,7 +419,9 @@ em { font-style: italic; }
   z-index: 0;
 }
 
-/* Decorative tree ornaments flush to window edges — only inner half visible */
+/* Decorative tree ornaments flush to window edges — only inner half visible.
+   Opacity penuh + z-index di atas .quote__inner (z=2) supaya pohon
+   tampil in-front-of frame oval. */
 .quote__deco {
   position: absolute;
   top: -6%;
@@ -428,14 +430,15 @@ em { font-style: italic; }
   height: auto;
   max-height: 112%;
   object-fit: contain;
-  opacity: .75;
+  opacity: 1;
   pointer-events: none;
   user-select: none;
-  z-index: 1;
+  z-index: 3;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, .35));
   will-change: transform;
 }
 .quote__deco--left {
+  top: 4%;                  /* override base -6%; tree di-anchor 4% dari atas section */
   left: -24.2%;            /* matches half of new width, keeps tree flush to left edge */
   width: 48.4%;            /* −20% from prior 60.5% */
   transform-origin: 50% 100%;
@@ -503,35 +506,84 @@ em { font-style: italic; }
 .quote__inner::after,
 .event-card::after  { bottom: 6px; transform: scaleY(-1); }
 
-/* --- Bagian khusus kartu Doa --- */
+/* --- Bagian khusus kartu Doa: pakai frame oval vintage (gambar) --- */
 .quote__inner {
   z-index: 2;
-  max-width: 460px;
+  max-width: 474px;        /* +3% dari 460px → frame oval membesar */
   margin: 0 auto;
-  padding: 1.4rem 1rem 1.2rem;
+  /* Padding asimetris: top 10rem + bottom 2rem → teks turun 1% dari posisi
+     60% (jadi ~61% dari atas frame). Sisi horizontal 2rem jadi margin
+     aman di luar oval. */
+  padding: 10rem 2rem 2rem;
+  /* Frame intrinsik 600×741, di-contain pada container 474px → 474×585. */
+  min-height: 585px;        /* +3% dari 568px → proporsional dengan max-width */
+  /* Override blok VINTAGE CARD: image jadi frame, tanpa border/shadow */
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  /* Image sudah PNG transparan — tidak perlu fallback gradien */
+  background: url('../assets/decor/vintage-frame.webp') center / contain no-repeat;
 }
+/* Strip FRAME6 tidak dipakai di Doa — image adalah frame-nya */
+.quote__inner::before,
+.quote__inner::after { content: none; }
 .quote__inner > * { position: relative; z-index: 1; }
 
+/* Teks Doa — font disamakan dengan .gift__desc. vmin = unit terkecil
+   dari viewport width/height, jadi proporsional di HP kecil & desktop.
+   `pre-line` supaya enter dari admin tampil jadi baris baru. */
 .quote__body {
   font-family: "Vintage Cormorant", var(--ff-serif);
   font-style: italic;
-  font-size: 15px;
-  color: #1a1408;
-  line-height: 1.85;
-  margin: 0 auto 1.1rem;
-  max-width: 420px;
+  font-weight: 700;
+  font-size: clamp(11px, 3.6vmin, 15px);
+  color: #000;
+  line-height: 1.45;
+  margin: 0 auto .85rem;
+  max-width: clamp(180px, 50vmin, 220px);
   text-align: center;
   text-shadow: none;
+  white-space: pre-line;
 }
 
 .quote__src {
   font-family: "Vintage Cormorant", var(--ff-serif);
-  font-weight: 600;
+  font-weight: 700;
   font-style: italic;
-  font-size: 16px;
+  font-size: 13px;
   color: #2c2418;
   letter-spacing: .04em;
-  margin-top: .25rem;
+  margin-top: .15rem;
+  text-shadow: none;
+  white-space: pre-line;
+}
+
+/* Di mobile, font disamakan dengan desktop supaya terbaca, line-height
+   tetap rapat untuk tetap muat dalam oval. */
+@media (max-width: 640px) {
+  .quote__body { line-height: 1.35; font-size: 15px; }
+}
+
+/* Padding mobile diturunkan ke ~64% dari atas frame (geser 2% ke bawah
+   dari posisi 66% sebelumnya). Dipisah ke media query supaya tidak
+   override desktop rules. */
+@media (max-width: 640px) {
+  .quote__inner { padding: 12rem 1.5rem 1.5rem; }
+}
+
+/* Di HP kecil sekali, teks tetap terbaca dengan ukuran wajar */
+@media (max-width: 380px) {
+  .quote__body { max-width: 168px; font-size: 13px; line-height: 1.3; }
+}
+
+.quote__src {
+  font-family: "Vintage Cormorant", var(--ff-serif);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 13px;
+  color: #2c2418;
+  letter-spacing: .04em;
+  margin-top: .15rem;
   text-shadow: none;
 }
 
@@ -949,8 +1001,8 @@ em { font-style: italic; }
 }
 .events__deco--l-top {
   top: 2%;
-  left: -18%;
-  width: 43.7%;
+  left: -19.8%;              /* +5% dari -18% proporsional dengan width */
+  width: 45.9%;              /* +5% dari 43.7% (= 43.7 × 1.05) */
   z-index: 3;                 /* in front of event cards */
   transform-origin: 50% 100%;
   animation: eventsSwayL 6.5s ease-in-out infinite alternate;
@@ -966,8 +1018,8 @@ em { font-style: italic; }
 }
 .events__deco--r-top {
   top: 2%;
-  right: -18%;
-  width: 43.7%;
+  right: -19.8%;             /* +5% proporsional dengan width */
+  width: 45.9%;              /* +5% dari 43.7% */
   z-index: 3;                 /* in front of event cards */
   transform: scaleX(-1);
   transform-origin: 50% 0%;
@@ -1379,7 +1431,7 @@ em { font-style: italic; }
   padding: .5rem .65rem;
 }
 .rsvp-msg strong {
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--ink);
   margin-right: .35rem;
@@ -1397,7 +1449,7 @@ em { font-style: italic; }
 }
 .rsvp-msg .attend.absen { background: var(--ink-faint); }
 .rsvp-msg p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-muted);
   margin-top: .2rem;
   line-height: 1.5;
@@ -1601,10 +1653,11 @@ em { font-style: italic; }
   text-align: center;
 }
 .closing__text {
-  font-family: var(--ff-serif);
+  font-family: "Vintage Cormorant", var(--ff-serif);
   font-style: italic;
-  font-size: 13.5px;
-  color: rgba(242, 237, 220, .92);
+  font-weight: 700;
+  font-size: 15px;
+  color: rgba(242, 237, 220, .95);
   line-height: 1.75;
   margin-bottom: .9rem;
   max-width: 380px;
@@ -1743,8 +1796,8 @@ em { font-style: italic; }
   25% { transform: translate(calc(var(--startX) + 2.5vw), 25vh) rotate(calc(var(--spin) * .25)) scale(1); }
   55% { transform: translate(calc(var(--startX) - 2vw),  55vh) rotate(calc(var(--spin) * .55)) scale(1); }
   85% { transform: translate(var(--landX), calc(100vh - var(--landY) - 12px)) rotate(var(--landRot)) scale(1); opacity: 1; }
-  93% { transform: translate(var(--landX), calc(100vh - var(--landY) - 4px))  rotate(var(--landRot)) scale(1); }
-  100%{ transform: translate(var(--landX), calc(100vh - var(--landY)))         rotate(var(--landRot)) scale(1); opacity: .95; }
+  93% { transform: translate(var(--landX), calc(100vh - var(--landY) - 4px))  rotate(var(--landRot)) scale(1); opacity: .7; }
+  100%{ transform: translate(var(--landX), calc(100vh - var(--landY)))         rotate(var(--landRot)) scale(1); opacity: .5; }
 }
 
 @media (pointer: coarse) {
@@ -1993,7 +2046,7 @@ em { font-style: italic; }
   font-family: var(--ff-serif);
   font-style: italic;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   color: rgba(255, 255, 255, .92);
   margin: 0;
@@ -2032,6 +2085,6 @@ em { font-style: italic; }
   .story .scene::before,
   .story .scene::after { width: 10%; }
   .story .card-cap { padding: 2rem 1rem 1rem; }
-  .story .card-cap__body { font-size: 11px; }
+  .story .card-cap__body { font-size: 12px; }
 }
 
